@@ -13,9 +13,9 @@ export default function RecentEventsSection({ events, loading }: RecentEventsSec
   const displayEvents = events.slice(0, 5);
 
   return (
-    <div className="bg-[#111726] border border-[#1e293b] rounded-xl p-6 sm:p-7 space-y-4">
+    <div className="bg-[#151b23] border border-[#29323d] rounded-xl p-6 sm:p-7 space-y-4">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-[#1e293b]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-[#29323d]">
         <div>
           <span className="text-xs font-mono font-semibold uppercase tracking-wider text-sky-400">
             AUDIT TRAIL
@@ -49,7 +49,7 @@ export default function RecentEventsSection({ events, loading }: RecentEventsSec
         <div className="overflow-x-auto">
           <table className="w-full text-xs font-mono">
             <thead>
-              <tr className="border-b border-[#1e293b] text-slate-400">
+              <tr className="border-b border-[#29323d] text-slate-400">
                 <th className="text-left py-3 px-3 font-semibold">Severity</th>
                 <th className="text-left py-3 px-3 font-semibold">Probable Cause</th>
                 <th className="text-left py-3 px-3 font-semibold">Primary Process</th>
@@ -59,7 +59,7 @@ export default function RecentEventsSection({ events, loading }: RecentEventsSec
                 <th className="py-3 px-3"></th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#1e293b]/60">
+            <tbody className="divide-y divide-[#29323d]/60">
               {displayEvents.map(event => {
                 const isHigh = event.severity === "HIGH";
                 const isMedium = event.severity === "MEDIUM";
@@ -91,7 +91,7 @@ export default function RecentEventsSection({ events, loading }: RecentEventsSec
                     </td>
 
                     <td className="py-3.5 px-3 text-slate-300 font-medium">
-                      {event.primary_process || "—"}
+                      {event.primary_display_name || event.primary_process || "—"}
                     </td>
 
                     <td className="py-3.5 px-3 text-slate-400">

@@ -1,7 +1,8 @@
 "use client";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { api } from "@/lib/api";
 import type { SystemMetric, HistoryPoint, MetricKey } from "@/types";
+import { usePolling } from "@/hooks/usePolling";
 
 // ── Current metrics polled every 3s ──────────────────────────────────────────
 export function useCurrentMetrics(intervalMs = 3000) {
@@ -12,22 +13,29 @@ export function useCurrentMetrics(intervalMs = 3000) {
   const fetchData = useCallback(async () => {
     try {
       const res = await api.getCurrentMetrics();
+      if (res.status === "no_data") {
+        setData(null);
+        setError("Waiting for the first telemetry sample from the backend.");
+        return;
+      }
+      const maxAgeSeconds = Math.max(60, intervalMs / 1000 * 5);
+      if ((res.collector_age_seconds ?? 0) > maxAgeSeconds) {
+        setData(null);
+        setError("Telemetry is stale. Check that the backend collector is running.");
+        return;
+      }
       setData(res);
       setError(null);
-    } catch (e: any) {
-      setError(e.message);
+    } catch (error: unknown) {
+      setData(null);
+      setError(error instanceof Error ? error.message : "Metrics API unavailable");
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [intervalMs]);
+  const refresh = usePolling(fetchData, intervalMs);
 
-  useEffect(() => {
-    fetchData();
-    const id = setInterval(fetchData, intervalMs);
-    return () => clearInterval(id);
-  }, [fetchData, intervalMs]);
-
-  return { data, error, loading, refresh: fetchData };
+  return { data, error, loading, refresh };
 }
 
 // ── Metric history for charts ─────────────────────────────────────────────────
@@ -38,43 +46,41 @@ export function useMetricHistory(
 ) {
   const [data, setData]   = useState<HistoryPoint[]>([]);
   const [loading, setLoading] = useState(true);
-  const rangeRef = useRef(rangeSeconds);
-  rangeRef.current = rangeSeconds;
-
+  const [error, setError] = useState<string | null>(null);
   const fetchData = useCallback(async () => {
     try {
       const now   = Date.now() / 1000;
-      const start = now - rangeRef.current;
+      const start = now - rangeSeconds;
       const res   = await api.getMetricHistory(metric, start, now);
       setData(res.data ?? []);
-    } catch (_) {
-      // silent
+      setError(null);
+    } catch (error) {
+      setData([]);
+      setError(error instanceof Error ? error.message : `${metric} history API unavailable`);
+      console.error(`Failed to load ${metric} history`, error);
     } finally {
       setLoading(false);
     }
-  }, [metric]);
+  }, [metric, rangeSeconds]);
+  usePolling(fetchData, pollMs);
 
-  useEffect(() => {
-    fetchData();
-    const id = setInterval(fetchData, pollMs);
-    return () => clearInterval(id);
-  }, [fetchData, pollMs]);
-
-  return { data, loading };
+  return { data, loading, error };
 }
 
 // ── Health status polled every 5s ─────────────────────────────────────────────
 export function useHealth(pollMs = 5000) {
-  const [health, setHealth] = useState<any>(null);
+  const [health, setHealth] = useState<Awaited<ReturnType<typeof api.getHealth>> | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetch_ = async () => {
-      try { setHealth(await api.getHealth()); } catch (_) {}
-    };
-    fetch_();
-    const id = setInterval(fetch_, pollMs);
-    return () => clearInterval(id);
-  }, [pollMs]);
+  const fetchHealth = useCallback(async () => {
+    try {
+      setHealth(await api.getHealth());
+      setError(null);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Health API unavailable");
+    }
+  }, []);
+  usePolling(fetchHealth, pollMs);
 
-  return health;
+  return { health, error };
 }

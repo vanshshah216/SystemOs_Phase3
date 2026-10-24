@@ -1,5 +1,5 @@
 "use client";
-import { Cpu, MemoryStick, HardDrive, Network } from "lucide-react";
+import { Cpu, MemoryStick, HardDrive, Network, type LucideIcon } from "lucide-react";
 import type { MetricContext } from "@/types";
 import Tooltip from "@/components/common/Tooltip";
 
@@ -28,7 +28,7 @@ export default function MetricCard({
     DISK: HardDrive,
     NETWORK: Network,
   };
-  const Icon = (icons as any)[label] || Cpu;
+  const Icon = (icons as Record<string, LucideIcon>)[label] || Cpu;
 
   const hasBaseline = context?.has_baseline && context.mean != null;
   const mean = context?.mean ?? 0;
@@ -60,7 +60,7 @@ export default function MetricCard({
 
   // Determine status label and badge
   let statusLabel = "Healthy";
-  let statusBadge = "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
+  let statusBadge = "bg-slate-500/10 text-slate-300 border-slate-700";
 
   if (isSustained) {
     statusLabel = "Sustained";
@@ -80,7 +80,7 @@ export default function MetricCard({
     : "—";
 
   return (
-    <div className="bg-[#111726] border border-[#1e293b] rounded-xl p-6 sm:p-7 flex flex-col justify-between min-h-[175px] hover:border-slate-700 transition-colors shadow-sm">
+    <div className="bg-[#151b23] border border-[#29323d] rounded-xl p-6 sm:p-7 flex flex-col justify-between min-h-[175px] hover:border-slate-700 transition-colors shadow-sm">
       {/* Top row: Label & Status Badge */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2.5">
@@ -106,7 +106,7 @@ export default function MetricCard({
       </div>
 
       {/* Bottom section: Baseline & Deviation */}
-      <div className="pt-3.5 border-t border-[#1e293b] space-y-1.5 text-xs font-mono">
+      <div className="pt-3.5 border-t border-[#29323d] space-y-1.5 text-xs font-mono">
         <div className="flex items-center justify-between text-slate-400">
           <span className="flex items-center text-slate-500 text-xs font-sans">
             Baseline <Tooltip term="baseline" explanation="" />

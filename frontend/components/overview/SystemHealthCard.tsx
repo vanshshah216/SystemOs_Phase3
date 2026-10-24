@@ -34,10 +34,10 @@ export default function SystemHealthCard({ metrics, activeEvents, loading }: Sys
     healthy: {
       label: "Healthy",
       icon: CheckCircle2,
-      textColor: "text-emerald-400",
-      borderColor: "border-emerald-500/30",
-      bgColor: "bg-emerald-500/5",
-      badge: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+      textColor: "text-slate-300",
+      borderColor: "border-[#29323d]",
+      bgColor: "bg-transparent",
+      badge: "bg-slate-500/10 text-slate-300 border-slate-700",
     },
     warning: {
       label: "Warning",
@@ -61,7 +61,7 @@ export default function SystemHealthCard({ metrics, activeEvents, loading }: Sys
   const Icon = c.icon;
 
   return (
-    <div className={`bg-[#111726] border ${c.borderColor} rounded-xl p-6 ${c.bgColor} transition-all`}>
+    <div className={`bg-[#151b23] border ${c.borderColor} rounded-xl p-6 ${c.bgColor} transition-all`}>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-start gap-4">
           <div className="p-2.5 rounded-lg bg-slate-900 border border-slate-800 shrink-0 mt-0.5">

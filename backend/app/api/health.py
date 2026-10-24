@@ -4,12 +4,14 @@ Provides real-time operational status for all SYSTEMOS monitoring pipeline compo
 """
 
 import time
+import logging
 from fastapi import APIRouter
-from app.database import get_connection
-from app.collector.telemetry import get_collector_status
+from app.database import get_connection, get_setting
+from app.collector.telemetry import get_collector_status, collect_once
 from app.services.pipeline import get_current_anomalies
 
 router = APIRouter(tags=["health"])
+logger = logging.getLogger("systemos.health")
 
 
 @router.get("/health")
@@ -22,35 +24,57 @@ def health_check():
         conn = get_connection()
         cur = conn.execute("SELECT 1")
         db_ok = True
-        count_row = conn.execute("SELECT COUNT(*) as cnt FROM process_snapshot WHERE is_demo=0").fetchone()
+        count_row = conn.execute(
+            """SELECT COUNT(*) as cnt
+               FROM process_snapshot
+               WHERE is_demo=0
+                 AND timestamp=(
+                     SELECT MAX(timestamp) FROM process_snapshot WHERE is_demo=0
+                 )"""
+        ).fetchone()
         snapshot_count = count_row["cnt"] if count_row else 0
         pragma_row = conn.execute("PRAGMA journal_mode").fetchone()
         wal_mode = pragma_row[0].lower() == "wal" if pragma_row else False
     except Exception:
-        pass
+        logger.exception("Health check could not query the database")
 
     # 2. Telemetry Collector Daemon check
     collector = get_collector_status()
     collector_running = bool(collector.get("running"))
     last_collection = collector.get("last_collection_time")
+    collector_age = None if last_collection is None else max(0.0, time.time() - last_collection)
+    try:
+        stale_after = max(60.0, float(get_setting("sampling_interval", "3")) * 5)
+    except (TypeError, ValueError):
+        logger.exception("Invalid sampling_interval setting during health check")
+        stale_after = 60.0
     collector_healthy = collector_running and (
-        last_collection is not None and (time.time() - last_collection) < 15.0
+        collector_age is not None and collector_age < stale_after
     )
 
     # 3. Pipeline & Statistical Engine check
-    pipeline_anomalies = get_current_anomalies()
-    stats_engine_ok = len(pipeline_anomalies) > 0
+    try:
+        get_current_anomalies()
+        stats_engine_ok = True
+    except Exception:
+        logger.exception("Health check could not query current diagnosis state")
+        stats_engine_ok = False
 
     components = {
         "telemetry_collector": {
             "name": "Live Telemetry Collector",
             "status": "operational" if collector_healthy else "degraded" if collector_running else "stopped",
-            "details": f"psutil daemon polling every 3s (last collected {int(time.time() - (last_collection or 0))}s ago)" if last_collection else "Waiting for initial collection",
+            "details": (
+                f"psutil daemon sampling every {get_setting('sampling_interval', '3')}s "
+                f"(last collected {int(collector_age)}s ago)"
+                if last_collection
+                else "Waiting for initial collection"
+            ),
         },
         "database_storage": {
             "name": "SQLite Observability Store",
             "status": "operational" if db_ok else "down",
-            "details": f"WAL mode: {wal_mode} | Process snapshots: {snapshot_count:,}",
+            "details": f"WAL mode: {wal_mode} | Processes in latest sample: {snapshot_count:,}",
         },
         "statistical_engine": {
             "name": "Statistical Engine",
@@ -74,7 +98,7 @@ def health_check():
         },
     }
 
-    overall_ok = db_ok and collector_running and stats_engine_ok
+    overall_ok = db_ok and collector_healthy and stats_engine_ok
 
     return {
         "status": "healthy" if overall_ok else "warning",
@@ -82,9 +106,19 @@ def health_check():
         "collector_running": collector_running,
         "database_ok": db_ok,
         "last_collection_time": last_collection,
+        "collector_age_seconds": collector_age,
         "pipeline_health": {
             "overall_status": "operational" if overall_ok else "degraded",
             "components": components,
         },
     }
 
+
+@router.post("/health/collect")
+def trigger_collection():
+    """
+    Immediately collect system metrics and process snapshots, run the analysis pipeline,
+    and invalidate the process analyzer cache.
+    """
+    result = collect_once(is_demo=False)
+    return {"ok": True, **result}

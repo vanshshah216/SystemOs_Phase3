@@ -10,7 +10,7 @@ Scenarios:
   memory_pressure     – RAM climbs from ~65% to ~90% with concurrent disk activity (Rule B: Memory pressure with increased disk activity)
   disk_io             – Disk read/write spikes 400x (Rule C: Sustained storage I/O activity)
   network_load        – Network bytes spike 1000x (Rule D: Sustained network-heavy workload)
-  process_memory_growth – Process memory grows steadily (Rule E: Sustained unusual memory growth)
+  process_memory_growth – Synthetic process memory trend (Rule E observation thresholds still apply)
 """
 
 import time
@@ -305,8 +305,8 @@ def _run_network_load():
 def _run_process_memory_growth():
     _baseline_samples(35)
     step = 0
-    _sim_state["diagnosis"] = "Sustained unusual memory growth in Chrome [Simulated]"
-    _sim_state["severity"] = "MEDIUM"
+    _sim_state["diagnosis"] = "Gradual memory increase observed for Google Chrome [Simulated]"
+    _sim_state["severity"] = "LOW"
 
     while not _stop_sim.is_set():
         # System RAM gradually creeps up, with Chrome memory growing steadily
@@ -329,7 +329,7 @@ def _run_process_memory_growth():
             _sim_state["detection_status"] = "Persistent Memory Growth"
         else:
             _sim_state["current_stage"] = "Completed"
-            _sim_state["detection_status"] = "Diagnosis Generated (Rule E)"
+            _sim_state["detection_status"] = "Synthetic trend complete; observation thresholds may not be met"
 
         _update_run_db("active")
         step = min(step + 1, 35)

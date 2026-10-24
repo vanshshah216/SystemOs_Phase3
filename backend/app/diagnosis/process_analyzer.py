@@ -24,6 +24,7 @@ Strictly adheres to SYSTEMOS's transparent, explainable architecture:
       * Any uncertainty or safety concerns
 """
 
+import json
 import time
 import math
 import logging
@@ -33,7 +34,15 @@ from dataclasses import dataclass, field, asdict
 import psutil
 
 from app.database import get_connection
+from app.collector.app_identity import resolve_process_identity
 from app.statistics.engine import compute_trend_slope, compute_mean
+from app.diagnosis.rules import (
+    MEMORY_GROWTH_MIN_DURATION_SECONDS,
+    MEMORY_GROWTH_MIN_NET_MB,
+    MEMORY_GROWTH_MIN_RATE_MB_PER_MINUTE,
+    MEMORY_GROWTH_MIN_RISING_SAMPLE_RATIO,
+    MEMORY_GROWTH_MIN_SAMPLES,
+)
 
 logger = logging.getLogger("systemos.process_analyzer")
 
@@ -106,6 +115,28 @@ _ANALYZER_CACHE: dict[str, Any] = {
 }
 
 
+def invalidate_process_cache() -> None:
+    """Force the next process analysis request to use the newest collector snapshot."""
+    _ANALYZER_CACHE["timestamp"] = 0.0
+
+
+def _find_recent_snapshot(pid: int, create_time: float) -> Optional[dict]:
+    conn = get_connection()
+    row = conn.execute(
+        """SELECT timestamp, cpu_percent, memory_percent, memory_bytes,
+                  status, create_time, ppid, threads
+           FROM process_snapshot
+           WHERE pid=? AND is_demo=0 AND timestamp>=?
+           ORDER BY timestamp DESC LIMIT 1""",
+        (pid, time.time() - 15),
+    ).fetchone()
+    if not row:
+        return None
+    if row["create_time"] is None or abs(row["create_time"] - create_time) > 1.0:
+        return None
+    return dict(row)
+
+
 def get_foreground_process_info() -> tuple[Optional[int], Optional[str]]:
     """
     Query Windows user32.GetForegroundWindow to find the active foreground PID and window title.
@@ -113,13 +144,23 @@ def get_foreground_process_info() -> tuple[Optional[int], Optional[str]]:
     """
     try:
         import ctypes
-        user32 = getattr(ctypes.windll, "user32", None)
-        if not user32:
+        from ctypes import wintypes
+
+        if not hasattr(ctypes, "windll"):
             return None, None
+        user32 = ctypes.WinDLL("user32", use_last_error=True)
+        user32.GetForegroundWindow.restype = wintypes.HWND
+        user32.GetWindowThreadProcessId.argtypes = [wintypes.HWND, ctypes.POINTER(wintypes.DWORD)]
+        user32.GetWindowThreadProcessId.restype = wintypes.DWORD
+        user32.GetWindowTextLengthW.argtypes = [wintypes.HWND]
+        user32.GetWindowTextLengthW.restype = ctypes.c_int
+        user32.GetWindowTextW.argtypes = [wintypes.HWND, wintypes.LPWSTR, ctypes.c_int]
+        user32.GetWindowTextW.restype = ctypes.c_int
+
         hwnd = user32.GetForegroundWindow()
         if not hwnd:
             return None, None
-        pid = ctypes.c_ulong()
+        pid = wintypes.DWORD()
         user32.GetWindowThreadProcessId(hwnd, ctypes.byref(pid))
         length = user32.GetWindowTextLengthW(hwnd)
         title = None
@@ -205,6 +246,18 @@ def get_active_attribution_map() -> dict[str, list[dict]]:
         """).fetchall()
         attr_map: dict[str, list[dict]] = {}
         for r in rows:
+            try:
+                evidence = json.loads(r["evidence_json"] or "{}")
+                raw_stats = evidence.get("raw_stats", {})
+            except (TypeError, ValueError, AttributeError):
+                raw_stats = {}
+            cause = (r["probable_cause"] or "").lower()
+            if (
+                (isinstance(raw_stats, dict) and raw_stats.get("rule_id") == "E")
+                or "unusual memory growth" in cause
+                or "memory increase observed" in cause
+            ):
+                continue
             proc = (r["primary_process"] or "").lower().strip()
             if proc:
                 if proc not in attr_map:
@@ -264,6 +317,9 @@ def classify_activity(
     ppid: Optional[int] = None,
     memory_slope_mb: float = 0.0,
     net_growth_mb: float = 0.0,
+    memory_growth_mb_per_minute: float = 0.0,
+    memory_observation_seconds: float = 0.0,
+    rising_sample_ratio: float = 0.0,
     has_active_anomaly: bool = False,
 ) -> str:
     """
@@ -342,10 +398,6 @@ def classify_activity(
     if is_helper and (memory_mb >= 120.0 or cpu_percent >= 1.0) and runtime_seconds >= 120.0:
         return CLASS_REVIEW_CANDIDATE
 
-    # Sub-rule 4d: Sustained Memory Accumulation (Rule E memory leak candidate)
-    if memory_slope_mb >= 0.5 and net_growth_mb >= 80.0 and sample_count >= 10:
-        return CLASS_REVIEW_CANDIDATE
-
     # ── Category 5: Active Application ──
     # User is currently interacting (foreground window) OR process is actively computing/transferring
     if is_foreground or cpu_percent >= 1.0 or total_io_rate >= 100_000 or (open_connections > 0 and status == "running"):
@@ -360,7 +412,7 @@ def compute_process_trends(
     pid: int,
     current_create_time: Optional[float] = None,
     window_seconds: float = 3600.0,
-    max_samples: int = 60,
+    max_samples: int = 600,
 ) -> dict:
     """
     Compute historical CPU and RAM trends for a process from SQLite process_snapshot.
@@ -383,9 +435,10 @@ def compute_process_trends(
         SELECT timestamp, cpu_percent, memory_bytes
         FROM process_snapshot
         WHERE pid = ? AND timestamp >= ? AND is_demo = 0
-        ORDER BY timestamp ASC
+        ORDER BY timestamp DESC
         LIMIT ?
     """, (pid, start_ts, max_samples)).fetchall()
+    rows = sorted(rows, key=lambda row: row["timestamp"])
 
     if not rows or len(rows) < 3:
         res = {
@@ -393,12 +446,15 @@ def compute_process_trends(
             "cpu_slope": 0.0,
             "cpu_trend": "stable",
             "memory_slope_mb": 0.0,
+            "memory_growth_mb_per_minute": 0.0,
             "memory_trend": "stable",
             "avg_cpu": 0.0,
             "peak_cpu": 0.0,
             "avg_memory_mb": 0.0,
             "peak_memory_mb": 0.0,
             "growth_mb": 0.0,
+            "observation_seconds": 0.0,
+            "rising_sample_ratio": 0.0,
             "has_history": False,
         }
         _TREND_CACHE[pid] = (now, res)
@@ -416,21 +472,38 @@ def compute_process_trends(
     avg_mem = round(compute_mean(mem_vals_mb) or 0.0, 1)
     peak_mem = round(max(mem_vals_mb), 1)
     growth_mb = round(mem_vals_mb[-1] - mem_vals_mb[0], 1)
+    observation_seconds = max(float(rows[-1]["timestamp"] - rows[0]["timestamp"]), 0.0)
+    memory_growth_mb_per_minute = (
+        round(mem_slope_mb * (len(rows) - 1) * 60 / observation_seconds, 3)
+        if observation_seconds > 0
+        else 0.0
+    )
+    rising_sample_ratio = (
+        sum(1 for before, after in zip(mem_vals_mb, mem_vals_mb[1:]) if after > before)
+        / (len(mem_vals_mb) - 1)
+    )
 
     cpu_trend = "rising" if cpu_slope > 0.05 else "falling" if cpu_slope < -0.05 else "stable"
-    mem_trend = "growing" if mem_slope_mb > 0.3 else "shrinking" if mem_slope_mb < -0.3 else "stable"
+    mem_trend = (
+        "growing" if memory_growth_mb_per_minute >= MEMORY_GROWTH_MIN_RATE_MB_PER_MINUTE
+        else "shrinking" if memory_growth_mb_per_minute <= -MEMORY_GROWTH_MIN_RATE_MB_PER_MINUTE
+        else "stable"
+    )
 
     res = {
         "sample_count": len(rows),
         "cpu_slope": round(cpu_slope, 3),
         "cpu_trend": cpu_trend,
         "memory_slope_mb": round(mem_slope_mb, 3),
+        "memory_growth_mb_per_minute": memory_growth_mb_per_minute,
         "memory_trend": mem_trend,
         "avg_cpu": avg_cpu,
         "peak_cpu": peak_cpu,
         "avg_memory_mb": avg_mem,
         "peak_memory_mb": peak_mem,
         "growth_mb": growth_mb,
+        "observation_seconds": observation_seconds,
+        "rising_sample_ratio": rising_sample_ratio,
         "has_history": True,
     }
     _TREND_CACHE[pid] = (now, res)
@@ -464,7 +537,9 @@ def generate_recommendations(profiles: list[dict]) -> list[dict]:
         runtime_secs = p.get("runtime_seconds") or 0.0
         trends = p.get("trends", {})
         growth_mb = trends.get("growth_mb", 0.0)
-        mem_slope = trends.get("memory_slope_mb", 0.0)
+        mem_growth_rate = trends.get("memory_growth_mb_per_minute", 0.0)
+        observation_seconds = trends.get("observation_seconds", 0.0)
+        rising_sample_ratio = trends.get("rising_sample_ratio", 0.0)
         conns = p.get("open_connections", 0)
         parent_name = p.get("parent_name") or "Unknown parent"
         is_fg = p.get("is_foreground", False)
@@ -676,49 +751,63 @@ def generate_recommendations(profiles: list[dict]) -> list[dict]:
             })
             continue
 
-        # RULE REC-4: Sustained Unusual Memory Growth (Rule E candidate)
-        if mem_slope >= 0.5 and growth_mb >= 80.0:
+        # RULE REC-4: Material memory increase is an observation, not an action request.
+        if (
+            trends.get("sample_count", 0) >= MEMORY_GROWTH_MIN_SAMPLES
+            and observation_seconds >= MEMORY_GROWTH_MIN_DURATION_SECONDS
+            and growth_mb >= MEMORY_GROWTH_MIN_NET_MB
+            and mem_growth_rate >= MEMORY_GROWTH_MIN_RATE_MB_PER_MINUTE
+            and rising_sample_ratio >= MEMORY_GROWTH_MIN_RISING_SAMPLE_RATIO
+        ):
             recommendations.append({
                 "id": f"rec_{pid}_memory_growth",
                 "pid": pid,
                 "name": name,
-                "category": "memory_growth",
-                "classification": CLASS_REVIEW_CANDIDATE,
-                "severity": "HIGH" if mem_mb >= 1000.0 else "MEDIUM",
+                "category": "memory_growth_observation",
+                "classification": activity,
+                "severity": "LOW",
                 "safety_tier": safety,
-                "reclaimable_memory_mb": round(growth_mb, 1),
+                "reclaimable_memory_mb": 0.0,
                 "reclaimable_cpu_percent": 0.0,
                 "activity_description": (
-                    f"Process exhibiting monotonic, persistent memory growth ({growth_mb:.1f} MB net increase)."
+                    f"Resident memory increased by {growth_mb:.0f} MB over {observation_seconds / 60:.0f} minutes."
                 ),
                 "resources_consumed": (
-                    f"Current Memory: {mem_mb:.1f} MB | Slope: +{mem_slope:.2f} MB/sample | CPU: {cpu_pct:.1f}%"
+                    f"Current memory: {mem_mb:.1f} MB RSS | Average increase: {mem_growth_rate:.1f} MB/min | CPU: {cpu_pct:.1f}%"
                 ),
                 "is_usage_unusual": (
-                    f"Unusual: Memory footprint has consistently grown by {mem_slope:.2f} MB per sample across {trends.get('sample_count', 0)} samples."
+                    "This is a measured increase, not proof of a fault or slowdown. App activity and caching can use more memory."
                 ),
                 "classification_reason": (
-                    f"Classified as '{CLASS_REVIEW_CANDIDATE}' due to statistically confirmed sustained memory accumulation (Rule E candidate)."
+                    f"Observed across {trends.get('sample_count', 0)} samples; {rising_sample_ratio:.0%} of consecutive samples increased."
                 ),
                 "investigation_advice": (
-                    "Yes, investigate. Check if the application has a memory retention issue, cached buffers, or uncollected resources."
+                    "No action is needed based on this observation alone. Check again only if the increase continues or system performance is affected."
                 ),
                 "manual_closure_guidance": (
-                    "Restarting the application normally will flush accumulated memory allocations and restore baseline footprint."
+                    "Do not close or restart the app solely because its memory use increased."
                 ),
                 "safety_and_uncertainty": (
-                    f"Safety: {safety}. Labelled strictly as 'Sustained unusual memory growth' – never declared a confirmed leak without "
-                    "internal heap profiling. Save work before restarting."
+                    "A process memory trend cannot determine whether the increase is expected. This does not diagnose a memory leak."
                 ),
                 "evidence": [
-                    f"Memory growth rate: +{mem_slope:.2f} MB per sample",
-                    f"Observed net expansion: +{growth_mb:.1f} MB over {trends.get('sample_count', 0)} samples",
-                    f"Current allocation: {mem_mb:.1f} MB RSS",
-                    f"Parent process: {parent_name}",
+                    f"Resident memory increase: {growth_mb:.0f} MB",
+                    f"Observation window: {observation_seconds / 60:.0f} minutes across {trends.get('sample_count', 0)} samples",
+                    f"Average increase: {mem_growth_rate:.1f} MB/min",
                 ],
             })
 
     # Sort recommendations by severity (HIGH -> MEDIUM -> LOW) and reclaimable memory
+    display_names = {
+        profile["pid"]: profile.get("display_name") or profile["name"]
+        for profile in profiles
+    }
+    for recommendation in recommendations:
+        recommendation["display_name"] = display_names.get(
+            recommendation["pid"],
+            recommendation["name"],
+        )
+
     sev_weight = {"HIGH": 3, "MEDIUM": 2, "LOW": 1}
     recommendations.sort(
         key=lambda r: (sev_weight.get(r["severity"], 0), r["reclaimable_memory_mb"]),
@@ -732,6 +821,7 @@ def inspect_live_process(
     net_conn_map: Optional[dict] = None,
     fg_info: Optional[tuple[Optional[int], Optional[str]]] = None,
     attr_map: Optional[dict[str, list[dict]]] = None,
+    snapshot: Optional[dict] = None,
 ) -> Optional[dict]:
     """
     Inspect a single live process with comprehensive telemetry and metadata.
@@ -745,6 +835,7 @@ def inspect_live_process(
             status = proc.status()
             create_time = proc.create_time()
             runtime_seconds = max(round(time.time() - create_time, 1), 0.0)
+            process_sample = snapshot or _find_recent_snapshot(pid, create_time)
 
             # Parent info with cache
             ppid, parent_name = _get_parent_info(pid, create_time, proc=proc)
@@ -757,19 +848,30 @@ def inspect_live_process(
             is_foreground = (fg_pid is not None and fg_pid == pid)
 
             # CPU & Memory
-            raw_cpu = proc.cpu_percent(interval=None) or 0.0
-            norm_cpu = round(raw_cpu / _CPU_COUNT, 1)
+            raw_cpu = process_sample.get("cpu_percent") if process_sample else None
+            norm_cpu = round(raw_cpu / _CPU_COUNT, 1) if raw_cpu is not None else None
 
             mem_info = proc.memory_info()
-            mem_bytes = mem_info.rss
+            mem_bytes = (
+                process_sample.get("memory_bytes")
+                if process_sample and process_sample.get("memory_bytes") is not None
+                else mem_info.rss
+            )
             mem_vms = mem_info.vms
-            mem_pct = round(proc.memory_percent() or 0.0, 2)
+            mem_pct = (
+                round(process_sample["memory_percent"], 2)
+                if process_sample and process_sample.get("memory_percent") is not None
+                else round(proc.memory_percent() or 0.0, 2)
+            )
             mem_mb = round(mem_bytes / (1024 * 1024), 1)
 
-            try:
-                threads = proc.num_threads()
-            except Exception:
-                threads = 0
+            if process_sample and process_sample.get("threads") is not None:
+                threads = process_sample["threads"]
+            else:
+                try:
+                    threads = proc.num_threads()
+                except (psutil.AccessDenied, psutil.NoSuchProcess):
+                    threads = 0
 
             # Disk I/O (gracefully handle AccessDenied or unsupported on Windows without admin)
             io_read_bytes = io_write_bytes = None
@@ -812,7 +914,7 @@ def inspect_live_process(
         activity = classify_activity(
             name=name,
             pid=pid,
-            cpu_percent=norm_cpu,
+            cpu_percent=norm_cpu or 0.0,
             memory_mb=mem_mb,
             status=status,
             io_read_rate=0.0,
@@ -826,19 +928,29 @@ def inspect_live_process(
             ppid=ppid,
             memory_slope_mb=trends.get("memory_slope_mb", 0.0),
             net_growth_mb=trends.get("growth_mb", 0.0),
+            memory_growth_mb_per_minute=trends.get("memory_growth_mb_per_minute", 0.0),
+            memory_observation_seconds=trends.get("observation_seconds", 0.0),
+            rising_sample_ratio=trends.get("rising_sample_ratio", 0.0),
             has_active_anomaly=bool(attributed_events),
         )
 
+        ident = resolve_process_identity(pid, proc=proc)
         return {
             "pid": pid,
             "name": name,
+            "display_name": ident.display_name,
+            "application_id": ident.application_id,
+            "role": ident.role,
+            "confidence": ident.confidence,
+            "is_fallback_label": ident.is_fallback_label,
+            "identity": ident.to_dict(),
             "ppid": ppid,
             "parent_name": parent_name,
             "status": status,
             "create_time": create_time,
             "runtime_seconds": runtime_seconds,
             "cpu_percent": norm_cpu,
-            "cpu_percent_raw": round(raw_cpu, 1),
+            "cpu_percent_raw": round(raw_cpu, 1) if raw_cpu is not None else None,
             "memory_percent": mem_pct,
             "memory_bytes": mem_bytes,
             "memory_vms_bytes": mem_vms,
@@ -947,18 +1059,19 @@ def analyze_processes(
 
         # Select candidate PIDs from latest snapshot collection
         candidate_pids: list[int] = []
+        samples_by_pid: dict[int, dict] = {}
         if latest and latest["ts"]:
             ts = latest["ts"]
             rows = conn.execute("""
-                SELECT pid, cpu_percent, memory_bytes
+                SELECT timestamp, pid, cpu_percent, memory_percent, memory_bytes,
+                       status, create_time, ppid, threads
                 FROM process_snapshot
-                WHERE timestamp BETWEEN ? AND ? AND is_demo = 0 AND pid > 0
-                GROUP BY pid
-                HAVING timestamp = MAX(timestamp)
+                WHERE timestamp=? AND is_demo=0 AND pid>0
                 ORDER BY cpu_percent DESC, memory_bytes DESC
                 LIMIT 120
-            """, (ts - 6, ts + 1)).fetchall()
+            """, (ts,)).fetchall()
             candidate_pids = [r["pid"] for r in rows]
+            samples_by_pid = {r["pid"]: dict(r) for r in rows}
 
         # Fallback to psutil process enumeration if database has no recent snapshots
         if not candidate_pids:
@@ -975,7 +1088,13 @@ def analyze_processes(
         # Inspect each candidate process (include accessible AND inaccessible)
         profiles = []
         for pid in candidate_pids:
-            prof = inspect_live_process(pid, net_conn_map=net_conn_map, fg_info=fg_info, attr_map=attr_map)
+            prof = inspect_live_process(
+                pid,
+                net_conn_map=net_conn_map,
+                fg_info=fg_info,
+                attr_map=attr_map,
+                snapshot=samples_by_pid.get(pid),
+            )
             if prof:
                 profiles.append(prof)
 

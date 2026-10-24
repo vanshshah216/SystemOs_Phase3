@@ -3,7 +3,7 @@ api/settings.py – GET/POST /settings endpoint.
 """
 
 from fastapi import APIRouter
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from app.database import get_connection, get_setting, set_setting
 
 router = APIRouter(prefix="/settings", tags=["settings"])
@@ -20,11 +20,11 @@ SETTINGS_KEYS = [
 from typing import Optional
 
 class SettingsUpdate(BaseModel):
-    sampling_interval:    Optional[float] = None
-    rolling_window:       Optional[int]   = None
-    zscore_threshold:     Optional[float] = None
-    persistence_n:        Optional[int]   = None
-    percentile_threshold: Optional[int]   = None
+    sampling_interval:    Optional[float] = Field(None, ge=1, le=30)
+    rolling_window:       Optional[int]   = Field(None, ge=30, le=1000)
+    zscore_threshold:     Optional[float] = Field(None, ge=1, le=5)
+    persistence_n:        Optional[int]   = Field(None, ge=2, le=20)
+    percentile_threshold: Optional[int]  = Field(None, ge=80, le=99)
 
 
 

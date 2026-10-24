@@ -46,7 +46,7 @@ export default function LivePerformanceSection() {
   }, [history]);
 
   return (
-    <div className="bg-[#111726] border border-[#1e293b] rounded-xl p-6 space-y-4">
+    <div className="bg-[#151b23] border border-[#29323d] rounded-xl p-6 space-y-4">
       {/* Header with Title and Range Switcher */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -59,7 +59,7 @@ export default function LivePerformanceSection() {
         </div>
 
         {/* Range Controls */}
-        <div className="flex items-center gap-1 bg-[#090e18] p-1 rounded-lg border border-[#1e293b]">
+        <div className="flex items-center gap-1 bg-[#090e18] p-1 rounded-lg border border-[#29323d]">
           <Clock className="w-3 h-3 text-slate-500 ml-1.5 mr-0.5" />
           {RANGES.map(r => (
             <button
@@ -78,7 +78,7 @@ export default function LivePerformanceSection() {
       </div>
 
       {/* Metric Tabs */}
-      <div className="flex items-center gap-2 border-b border-[#1e293b] pb-2">
+      <div className="flex items-center gap-2 border-b border-[#29323d] pb-2">
         {TABS.map(tab => {
           const Icon = tab.icon;
           const active = activeTab === tab.id;
@@ -100,7 +100,7 @@ export default function LivePerformanceSection() {
       </div>
 
       {/* Telemetry Summary Strip */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono bg-[#0d1322] border border-[#1a243a] rounded-lg p-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono bg-[#11171f] border border-[#232d38] rounded-lg p-3">
         <div>
           <span className="text-slate-500 text-[11px]">Current Value</span>
           <div className="text-sm font-bold text-slate-200 mt-0.5">

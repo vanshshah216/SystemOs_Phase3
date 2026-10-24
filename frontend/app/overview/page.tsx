@@ -19,18 +19,18 @@ export default function OverviewPage() {
   const activeEvents = events.filter(e => e.status === "active");
   const latestActive = activeEvents[0] ?? null;
 
-  const cpuTrend = metrics?.cpu_context?.trend_slope != null
+  const cpuTrend: "up" | "down" | "flat" | null = metrics?.cpu_context?.trend_slope != null
     ? metrics.cpu_context.trend_slope > 0.5 ? "up"
     : metrics.cpu_context.trend_slope < -0.5 ? "down" : "flat"
     : null;
 
-  const ramTrend = metrics?.ram_context?.trend_slope != null
+  const ramTrend: "up" | "down" | "flat" | null = metrics?.ram_context?.trend_slope != null
     ? metrics.ram_context.trend_slope > 0.02 ? "up"
     : metrics.ram_context.trend_slope < -0.02 ? "down" : "flat"
     : null;
 
   return (
-    <div className="flex-1 flex flex-col min-w-0 bg-[#0b0f17]">
+    <div className="flex-1 flex flex-col min-w-0 bg-[#0d1117]">
       {/* Sticky Clean Header */}
       <TopBar title="Overview" subtitle="Real-Time Telemetry" />
 
@@ -39,7 +39,7 @@ export default function OverviewPage() {
         {/* SECTION 1: System Overview Header */}
         <div>
           <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-100 font-sans">
-            SYSTEM OVERVIEW
+            Your system at a glance
           </h2>
           <p className="text-sm text-slate-400 font-sans mt-1">
             Real-time performance monitoring and explainable root-cause diagnosis.
@@ -54,7 +54,7 @@ export default function OverviewPage() {
             formattedValue={formatPct(metrics?.cpu_percent) ?? "—"}
             unit="%"
             context={metrics?.cpu_context}
-            trend={cpuTrend as any}
+            trend={cpuTrend}
             baselineFormatter={v => `${v.toFixed(1)}%`}
           />
           <MetricCard
@@ -63,7 +63,7 @@ export default function OverviewPage() {
             formattedValue={formatPct(metrics?.ram_percent) ?? "—"}
             unit="%"
             context={metrics?.ram_context}
-            trend={ramTrend as any}
+            trend={ramTrend}
             baselineFormatter={v => `${v.toFixed(1)}%`}
           />
           <MetricCard

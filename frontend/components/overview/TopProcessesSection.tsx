@@ -18,9 +18,9 @@ export default function TopProcessesSection() {
   const displayProcs = processes.slice(0, 8);
 
   return (
-    <div className="bg-[#111726] border border-[#1e293b] rounded-xl p-6 sm:p-7 space-y-4">
+    <div className="bg-[#151b23] border border-[#29323d] rounded-xl p-6 sm:p-7 space-y-4">
       {/* Header with Title and Tabs */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#1e293b]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#29323d]">
         <div>
           <span className="text-xs font-mono font-semibold uppercase tracking-wider text-sky-400">
             SYSTEM ATTRIBUTION
@@ -35,7 +35,7 @@ export default function TopProcessesSection() {
 
         <div className="flex items-center gap-3 self-start sm:self-center">
           {/* Tabs */}
-          <div className="flex items-center gap-1 bg-[#090e18] p-1 rounded-lg border border-[#1e293b]">
+          <div className="flex items-center gap-1 bg-[#090e18] p-1 rounded-lg border border-[#29323d]">
             {TABS.map(tab => {
               const Icon = tab.icon;
               const active = activeTab === tab.id;
@@ -69,7 +69,7 @@ export default function TopProcessesSection() {
       <div className="overflow-x-auto">
         <table className="w-full text-xs font-mono">
           <thead>
-            <tr className="border-b border-[#1e293b] text-slate-400">
+            <tr className="border-b border-[#29323d] text-slate-400">
               <th className="text-left py-3 px-4 font-semibold">Process</th>
               <th className="text-right py-3 px-4 font-semibold">PID</th>
               <th className="text-left py-3 px-6 font-semibold w-48">CPU</th>
@@ -79,7 +79,7 @@ export default function TopProcessesSection() {
               <th className="text-right py-3 px-4 font-semibold">Status</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-[#1e293b]/60">
+          <tbody className="divide-y divide-[#29323d]/60">
             {loading && processes.length === 0 ? (
               <tr>
                 <td colSpan={7} className="py-12 text-center text-slate-500 font-mono">
@@ -111,7 +111,12 @@ export default function TopProcessesSection() {
                         className="hover:text-sky-400 flex items-center gap-2"
                       >
                         <span className="w-1.5 h-1.5 rounded-full bg-sky-400/80" />
-                        <span className="truncate">{p.name}</span>
+                        <span className="flex min-w-0 flex-col">
+                          <span className="truncate">{p.display_name || p.name}</span>
+                          {p.display_name && p.display_name !== p.name && (
+                            <span className="truncate text-[10px] font-normal text-slate-500">{p.name}</span>
+                          )}
+                        </span>
                       </Link>
                     </td>
 
@@ -148,7 +153,7 @@ export default function TopProcessesSection() {
                       <div className="flex items-center gap-3">
                         <div className="flex-1 h-2 rounded-full bg-slate-800 overflow-hidden">
                           <div
-                            className="h-full rounded-full bg-indigo-400"
+                            className="h-full rounded-full bg-sky-400"
                             style={{ width: `${Math.min(mem, 100)}%` }}
                           />
                         </div>

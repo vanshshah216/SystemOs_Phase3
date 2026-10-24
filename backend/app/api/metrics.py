@@ -22,7 +22,7 @@ def get_current_metrics():
     conn = get_connection()
 
     row = conn.execute(
-        "SELECT * FROM system_metric ORDER BY timestamp DESC LIMIT 1"
+        "SELECT * FROM system_metric WHERE is_demo=0 ORDER BY timestamp DESC LIMIT 1"
     ).fetchone()
 
     if not row:
@@ -32,16 +32,14 @@ def get_current_metrics():
     ts = row["timestamp"]
     procs = conn.execute("""
         SELECT pid, name, cpu_percent, memory_percent, memory_bytes, threads,
-               io_read_bytes, io_write_bytes
+               io_read_bytes, io_write_bytes, display_name, application_id,
+               status, ppid, create_time
         FROM process_snapshot
-        WHERE timestamp BETWEEN ? AND ?
-          AND pid > 0
+        WHERE timestamp=? AND is_demo=? AND pid > 0
           AND LOWER(name) NOT LIKE '%idle%'
-        GROUP BY pid
-        HAVING timestamp = MAX(timestamp)
         ORDER BY cpu_percent DESC NULLS LAST
         LIMIT 15
-    """, (ts - 6, ts + 1)).fetchall()
+    """, (ts, row["is_demo"])).fetchall()
 
     # Build anomaly context for each key metric, including sample count
     from app.diagnosis.persistence import get_all_states
@@ -70,7 +68,7 @@ def get_current_metrics():
 
     # Overall status
     active_events = conn.execute(
-        "SELECT severity FROM diagnosis_event WHERE status='active' ORDER BY created_at DESC LIMIT 1"
+        "SELECT severity FROM diagnosis_event WHERE status='active' AND is_demo=0 ORDER BY created_at DESC LIMIT 1"
     ).fetchone()
 
     if active_events:
@@ -80,7 +78,9 @@ def get_current_metrics():
         overall_status = "healthy"
 
     return {
+        "status": "ok",
         "timestamp":         row["timestamp"],
+        "collector_age_seconds": max(0.0, time.time() - row["timestamp"]),
         "overall_status":    overall_status,
         "cpu_percent":       row["cpu_percent"],
         "cpu_user":          row["cpu_user"],
@@ -100,7 +100,7 @@ def get_current_metrics():
         "top_processes": [
             {
                 **dict(p),
-                # Normalise cpu_percent: psutil reports sum across all cores
+                # psutil values are normalized across logical CPU cores.
                 "cpu_percent": round((p["cpu_percent"] or 0) / _CPU_COUNT, 1),
             }
             for p in procs
@@ -135,7 +135,7 @@ def get_metric_history(
     rows = conn.execute(f"""
         SELECT timestamp, {metric} as value
         FROM system_metric
-        WHERE timestamp BETWEEN ? AND ?
+        WHERE timestamp BETWEEN ? AND ? AND is_demo=0
         ORDER BY timestamp ASC
         LIMIT ?
     """, (start, end, limit)).fetchall()
@@ -160,7 +160,7 @@ def get_metric_stats(metric: str):
 
     conn = get_connection()
     row  = conn.execute(
-        f"SELECT timestamp, {metric} FROM system_metric ORDER BY timestamp DESC LIMIT 1"
+        f"SELECT timestamp, {metric} FROM system_metric WHERE is_demo=0 ORDER BY timestamp DESC LIMIT 1"
     ).fetchone()
 
     if not row or row[metric] is None:

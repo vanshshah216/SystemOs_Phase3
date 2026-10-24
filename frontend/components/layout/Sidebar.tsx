@@ -11,7 +11,6 @@ import {
   Settings,
   ChevronLeft,
   ChevronRight,
-  ShieldCheck,
   Server,
   Database,
   Radio
@@ -30,7 +29,7 @@ const navItems = [
 export default function Sidebar() {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
-  const health = useHealth();
+  const { health, error: healthError } = useHealth();
 
   if (pathname === "/journey") {
     return null;
@@ -40,11 +39,11 @@ export default function Sidebar() {
     <aside
       className={`${
         collapsed ? "w-16" : "w-64"
-      } min-h-screen bg-[#0d1322] border-r border-[#1e293b] flex flex-col justify-between select-none transition-all duration-300 z-30 shrink-0 sticky top-0 h-screen`}
+      } min-h-screen bg-[#11171f] border-r border-[#29323d] flex flex-col justify-between select-none transition-all duration-300 z-30 shrink-0 sticky top-0 h-screen`}
     >
       {/* Top Brand Section */}
       <div>
-        <div className="h-16 border-b border-[#1e293b] flex items-center justify-between px-4">
+        <div className="h-16 border-b border-[#29323d] flex items-center justify-between px-4">
           {!collapsed ? (
             <div>
               <div className="flex items-center gap-2">
@@ -98,7 +97,7 @@ export default function Sidebar() {
       </div>
 
       {/* Bottom Service Health Deck */}
-      <div className="p-3 border-t border-[#1e293b] bg-[#090e18] text-xs font-mono space-y-2">
+      <div className="p-3 border-t border-[#29323d] bg-[#090e18] text-xs font-mono space-y-2">
         {!collapsed ? (
           <div className="space-y-2 py-1">
             {/* Collector */}
@@ -108,9 +107,9 @@ export default function Sidebar() {
                 Collector
               </span>
               <span className="flex items-center gap-1 text-[11px]">
-                <span className={`w-2 h-2 rounded-full ${health?.collector_running ? "bg-emerald-500" : "bg-rose-500"}`} />
-                <span className={health?.collector_running ? "text-emerald-400" : "text-rose-400"}>
-                  {health?.collector_running ? "Running" : "Stopped"}
+                <span className={`w-2 h-2 rounded-full ${health?.collector_running ? "bg-slate-500" : healthError ? "bg-amber-400" : "bg-slate-600"}`} />
+                <span className={health?.collector_running ? "text-slate-300" : healthError ? "text-amber-300" : "text-slate-400"}>
+                  {health?.collector_running ? "Running" : healthError ? "Unavailable" : "Checking"}
                 </span>
               </span>
             </div>
@@ -122,9 +121,9 @@ export default function Sidebar() {
                 Database
               </span>
               <span className="flex items-center gap-1 text-[11px]">
-                <span className={`w-2 h-2 rounded-full ${health?.database_ok ? "bg-emerald-500" : "bg-rose-500"}`} />
-                <span className={health?.database_ok ? "text-emerald-400" : "text-rose-400"}>
-                  {health?.database_ok ? "Connected" : "Error"}
+                <span className={`w-2 h-2 rounded-full ${health?.database_ok ? "bg-slate-500" : healthError ? "bg-amber-400" : "bg-slate-600"}`} />
+                <span className={health?.database_ok ? "text-slate-300" : healthError ? "text-amber-300" : "text-slate-400"}>
+                  {health?.database_ok ? "Connected" : healthError ? "Unavailable" : "Checking"}
                 </span>
               </span>
             </div>
@@ -136,22 +135,24 @@ export default function Sidebar() {
                 API
               </span>
               <span className="flex items-center gap-1 text-[11px]">
-                <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                <span className="text-emerald-400">Healthy</span>
+                <span className={`w-2 h-2 rounded-full ${healthError ? "bg-amber-400" : "bg-slate-500"}`} />
+                <span className={healthError ? "text-amber-300" : "text-slate-300"}>
+                  {healthError ? "Unavailable" : "Available"}
+                </span>
               </span>
             </div>
           </div>
         ) : (
           <div className="flex flex-col items-center gap-2 py-1">
             <span
-              className={`w-2.5 h-2.5 rounded-full ${health?.collector_running ? "bg-emerald-500" : "bg-rose-500"}`}
-              title={`Collector: ${health?.collector_running ? "Running" : "Stopped"}`}
+              className={`w-2.5 h-2.5 rounded-full ${health?.collector_running ? "bg-slate-500" : healthError ? "bg-amber-400" : "bg-slate-600"}`}
+              title={`Collector: ${health?.collector_running ? "Running" : healthError ? "Unavailable" : "Checking"}`}
             />
             <span
-              className={`w-2.5 h-2.5 rounded-full ${health?.database_ok ? "bg-emerald-500" : "bg-rose-500"}`}
-              title={`Database: ${health?.database_ok ? "Connected" : "Error"}`}
+              className={`w-2.5 h-2.5 rounded-full ${health?.database_ok ? "bg-slate-500" : healthError ? "bg-amber-400" : "bg-slate-600"}`}
+              title={`Database: ${health?.database_ok ? "Connected" : healthError ? "Unavailable" : "Checking"}`}
             />
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" title="API: Healthy" />
+            <span className={`w-2.5 h-2.5 rounded-full ${healthError ? "bg-amber-400" : "bg-slate-500"}`} title={`API: ${healthError ? "Unavailable" : "Available"}`} />
           </div>
         )}
       </div>

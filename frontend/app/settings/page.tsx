@@ -55,12 +55,17 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
-  const health = useHealth();
+  const { health, error: healthError } = useHealth();
 
   useEffect(() => {
     api.getSettings()
       .then(s => { setSettings(s); setDirty(false); })
-      .catch(() => {})
+      .catch((error: unknown) => {
+        setMessage({
+          type: "error",
+          text: error instanceof Error ? `Unable to load settings: ${error.message}` : "Unable to load settings",
+        });
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -78,9 +83,10 @@ export default function SettingsPage() {
       const res = await api.updateSettings(body);
       setSettings(res.current);
       setDirty(false);
-      setMessage({ type: "success", text: "Settings saved successfully. Changes will take effect on the next collection cycle." });
-    } catch (e: any) {
-      setMessage({ type: "error", text: `Error updating settings: ${e.message}` });
+      setMessage({ type: "success", text: "Settings saved. Sampling interval changes take effect on the next collection cycle." });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Settings API unavailable";
+      setMessage({ type: "error", text: `Error updating settings: ${message}` });
     } finally {
       setSaving(false);
     }
@@ -93,14 +99,14 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="flex-1 flex flex-col min-w-0 bg-[#0b0f17]">
+    <div className="flex-1 flex flex-col min-w-0 bg-[#0d1117]">
       <TopBar title="Settings" subtitle="System Configuration" />
 
       <main className="flex-1 px-6 sm:px-8 lg:px-10 py-8 max-w-[1440px] w-full mx-auto space-y-8">
         {/* Header */}
         <div>
           <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-100 font-sans">
-            SYSTEM SETTINGS
+            System settings
           </h2>
           <p className="text-sm text-slate-400 font-sans mt-1">
             Configure telemetry sampling frequencies, rolling baseline windows, and anomaly thresholds.
@@ -109,7 +115,7 @@ export default function SettingsPage() {
 
         {/* System Service Health Status Strip */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="bg-[#111726] border border-[#1e293b] rounded-xl p-5 flex items-center justify-between">
+          <div className="bg-[#151b23] border border-[#29323d] rounded-xl p-5 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-slate-800 text-sky-400 border border-slate-700">
                 <Radio className="w-5 h-5" />
@@ -117,16 +123,16 @@ export default function SettingsPage() {
               <div>
                 <div className="text-xs text-slate-400 font-sans">Collector Daemon</div>
                 <div className="text-sm font-bold font-mono text-slate-200 mt-0.5">
-                  {health?.collector_running ? "Running" : "Stopped"}
+                  {health?.collector_running ? "Running" : healthError ? "Unavailable" : "Stopped"}
                 </div>
               </div>
             </div>
             <span className={`w-2.5 h-2.5 rounded-full ${health?.collector_running ? "bg-emerald-500" : "bg-rose-500"}`} />
           </div>
 
-          <div className="bg-[#111726] border border-[#1e293b] rounded-xl p-5 flex items-center justify-between">
+          <div className="bg-[#151b23] border border-[#29323d] rounded-xl p-5 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-slate-800 text-indigo-400 border border-slate-700">
+              <div className="p-2 rounded-lg bg-slate-800 text-sky-400 border border-slate-700">
                 <Database className="w-5 h-5" />
               </div>
               <div>
@@ -139,7 +145,7 @@ export default function SettingsPage() {
             <span className={`w-2.5 h-2.5 rounded-full ${health?.database_ok ? "bg-emerald-500" : "bg-rose-500"}`} />
           </div>
 
-          <div className="bg-[#111726] border border-[#1e293b] rounded-xl p-5 flex items-center justify-between">
+          <div className="bg-[#151b23] border border-[#29323d] rounded-xl p-5 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-slate-800 text-emerald-400 border border-slate-700">
                 <Server className="w-5 h-5" />
@@ -156,8 +162,8 @@ export default function SettingsPage() {
         </div>
 
         {/* Configuration Sliders & Fields */}
-        <div className="bg-[#111726] border border-[#1e293b] rounded-xl p-6 sm:p-8 space-y-6">
-          <div className="pb-4 border-b border-[#1e293b]">
+        <div className="bg-[#151b23] border border-[#29323d] rounded-xl p-6 sm:p-8 space-y-6">
+          <div className="pb-4 border-b border-[#29323d]">
             <h3 className="text-lg font-bold text-slate-100 font-sans">
               Mathematical Parameters
             </h3>
@@ -173,7 +179,7 @@ export default function SettingsPage() {
           ) : (
             <div className="space-y-6">
               {FIELDS.map(f => (
-                <div key={f.key} className="p-5 rounded-lg bg-[#0d1322] border border-[#1a243a] space-y-3">
+                <div key={f.key} className="p-5 rounded-lg bg-[#11171f] border border-[#232d38] space-y-3">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
                     <div>
                       <label className="text-sm font-semibold text-slate-200 font-sans flex items-center">
@@ -209,7 +215,7 @@ export default function SettingsPage() {
               ))}
 
               {/* Action Buttons */}
-              <div className="pt-4 border-t border-[#1e293b] flex flex-wrap items-center gap-3">
+              <div className="pt-4 border-t border-[#29323d] flex flex-wrap items-center gap-3">
                 <button
                   onClick={handleSave}
                   disabled={!dirty || saving}
@@ -244,7 +250,7 @@ export default function SettingsPage() {
         </div>
 
         {/* Sovereignty & Safety Notice */}
-        <div className="p-5 rounded-xl bg-[#111726] border border-[#1e293b] flex items-start gap-3 text-xs font-sans text-slate-400">
+        <div className="p-5 rounded-xl bg-[#151b23] border border-[#29323d] flex items-start gap-3 text-xs font-sans text-slate-400">
           <Shield className="w-5 h-5 text-sky-400 shrink-0 mt-0.5" />
           <p className="leading-relaxed">
             All configuration updates are strictly persisted to your local SQLite store. In accordance with non-destructive system sovereignty principles, SYSTEMOS does not include automated process termination or hostile kernel kill routines.

@@ -20,6 +20,21 @@ export interface MetricContext {
 export interface ProcessInfo {
   pid: number;
   name: string;
+  display_name?: string | null;
+  application_id?: string | null;
+  cpu_percent: number | null;
+  memory_percent: number | null;
+  memory_bytes: number | null;
+  threads: number | null;
+  io_read_bytes: number | null;
+  io_write_bytes: number | null;
+}
+
+export interface ProcessHistoryPoint {
+  timestamp: number;
+  pid: number;
+  name: string;
+  display_name?: string | null;
   cpu_percent: number | null;
   memory_percent: number | null;
   memory_bytes: number | null;
@@ -30,6 +45,7 @@ export interface ProcessInfo {
 
 export interface SystemMetric {
   timestamp: number;
+  collector_age_seconds?: number | null;
   overall_status: "healthy" | "warning" | "critical";
   cpu_percent: number | null;
   cpu_user: number | null;
@@ -51,9 +67,34 @@ export interface SystemMetric {
   persistence_n: number;
 }
 
+export type CurrentMetricsResponse =
+  | (SystemMetric & { status: "ok" })
+  | { status: "no_data"; metrics: null };
+
 export interface HistoryPoint {
   timestamp: number;
   value: number | null;
+}
+
+export interface HealthResponse {
+  status: "healthy" | "warning";
+  backend_status: "ok";
+  collector_running: boolean;
+  database_ok: boolean;
+  last_collection_time: number | null;
+  collector_age_seconds: number | null;
+  pipeline_health: {
+    overall_status: "operational" | "degraded";
+    components: Record<string, {
+      name: string;
+      status: "operational" | "degraded" | "down" | "initializing" | "stopped" | "unknown";
+      details: string;
+    }>;
+  };
+}
+
+export interface MetricHistoryResponse {
+  data: HistoryPoint[];
 }
 
 export type MetricKey =
@@ -73,20 +114,83 @@ export interface EvidenceStrength {
 }
 
 export interface DiagnosisEvent {
-  id: number;
+  id: number | string;
+  event_type?: "diagnostic" | "application_started" | "browser_tab_activity";
   start_time: number;
   end_time: number | null;
   severity: "HIGH" | "MEDIUM" | "LOW";
   probable_cause: string;
   primary_process: string | null;
-  status: "active" | "resolved";
+  primary_display_name?: string | null;
+  primary_process_name?: string | null;
+  primary_pid?: number | null;
+  application_id?: string | null;
+  category?: string | null;
+  incident_key?: string | null;
+  status: "active" | "resolved" | "recorded";
   created_at: number;
   is_demo: boolean;
   evidence?: {
     evidence_items: string[];
-    evidence_strength: EvidenceStrength;
+    evidence_strength: EvidenceStrength | null;
     raw_stats: Record<string, number | string | null>;
   };
+}
+
+export interface ApplicationProcessMember {
+  pid: number;
+  process_name: string;
+  display_name: string;
+  cpu_percent: number;
+  memory_bytes: number;
+  memory_percent: number;
+  status?: string;
+  is_foreground?: boolean;
+  ppid?: number | null;
+  parent_name?: string | null;
+  parent_pid?: number | null;
+  role?: string;
+  display_source?: string;
+  confidence?: number;
+  package_family?: string | null;
+  publisher?: string | null;
+  exe_path?: string | null;
+}
+
+export interface ApplicationGroup {
+  application_id: string;
+  display_name: string;
+  role: string;
+  is_foreground: boolean;
+  last_foreground_at?: number | null;
+  process_count: number;
+  cpu_percent: number;
+  memory_bytes: number;
+  memory_percent: number;
+  confidence: number;
+  is_fallback_label: boolean;
+  processes: ApplicationProcessMember[];
+}
+
+export interface IdleApplicationSuggestion {
+  application_id: string;
+  display_name: string;
+  last_foreground_at: number;
+  idle_seconds: number;
+  memory_bytes: number;
+  process_count: number;
+}
+
+export interface ApplicationsResponse {
+  timestamp: number | null;
+  collector_age_seconds?: number | null;
+  cpu_core_count: number;
+  cpu_percent_note: string;
+  total_applications: number;
+  total_processes_enumerated: number;
+  idle_suggestion_threshold_seconds: number;
+  idle_suggestions: IdleApplicationSuggestion[];
+  applications: ApplicationGroup[];
 }
 
 export interface AppSettings {
@@ -117,6 +221,7 @@ export interface ProcessRecommendation {
   id: string;
   pid: number;
   name: string;
+  display_name?: string;
   category: string;
   classification: string;
   severity: "HIGH" | "MEDIUM" | "LOW";
@@ -139,6 +244,12 @@ export interface ProcessRecommendation {
 export interface ProcessProfile {
   pid: number;
   name: string;
+  display_name?: string;
+  application_id?: string;
+  role?: string;
+  confidence?: number;
+  is_fallback_label?: boolean;
+  identity?: Record<string, unknown>;
   ppid: number | null;
   parent_name: string | null;
   status: string;
@@ -169,7 +280,7 @@ export interface ProcessProfile {
     probable_cause: string;
     start_time: number;
   }>;
-  trends: Record<string, any>;
+  trends: ProcessTrends;
   is_accessible: boolean;
 }
 
@@ -191,6 +302,12 @@ export interface ProcessAnalyzerSummary {
   network_metrics_description: string;
 }
 
+export interface ProcessTrends {
+  cpu_slope?: number | null;
+  memory_trend?: string | null;
+  [key: string]: number | string | null | undefined;
+}
+
 export interface ProcessCategoryBreakdown {
   label: string;
   count: number;
@@ -205,3 +322,27 @@ export interface ProcessAnalyzerResponse {
   categories_breakdown: Record<string, ProcessCategoryBreakdown>;
 }
 
+export interface ProcessListResponse {
+  timestamp?: number;
+  processes: ProcessInfo[];
+}
+
+export interface ProcessHistoryResponse {
+  pid: number;
+  history: ProcessHistoryPoint[];
+}
+
+export interface ProcessRecommendationsResponse {
+  count: number;
+  potential_reclaimable_memory_mb: number;
+  recommendations: ProcessRecommendation[];
+}
+
+export interface SingleProcessAnalysisResponse {
+  profile: ProcessProfile;
+  recommendations: ProcessRecommendation[];
+}
+
+export interface EventsResponse {
+  events: DiagnosisEvent[];
+}

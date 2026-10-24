@@ -1,0 +1,11 @@
+{
+  "manifest_version": 3,
+  "name": "SYSTEMOS Browser Activity",
+  "version": "1.0.0",
+  "description": "Sends browser tab titles and activity events to the local SYSTEMOS monitor.",
+  "permissions": ["tabs"],
+  "host_permissions": ["http://127.0.0.1:8000/*"],
+  "background": {
+    "service_worker": "service-worker.js"
+  }
+}

@@ -75,6 +75,32 @@ def init_db():
         CREATE INDEX IF NOT EXISTS idx_ps_pid_timestamp ON process_snapshot(pid, timestamp);
         CREATE INDEX IF NOT EXISTS idx_ps_ts_pid ON process_snapshot(timestamp, pid);
 
+        CREATE TABLE IF NOT EXISTS application_lifecycle_event (
+            id              INTEGER PRIMARY KEY AUTOINCREMENT,
+            timestamp       REAL NOT NULL,
+            application_id  TEXT NOT NULL,
+            display_name    TEXT NOT NULL,
+            process_name    TEXT NOT NULL,
+            pid             INTEGER,
+            evidence_json   TEXT NOT NULL
+        );
+        CREATE INDEX IF NOT EXISTS idx_ale_timestamp ON application_lifecycle_event(timestamp);
+
+        CREATE TABLE IF NOT EXISTS browser_tab_event (
+            id              INTEGER PRIMARY KEY AUTOINCREMENT,
+            timestamp       REAL NOT NULL,
+            browser         TEXT NOT NULL,
+            title           TEXT NOT NULL,
+            action          TEXT NOT NULL
+        );
+        CREATE INDEX IF NOT EXISTS idx_bte_timestamp ON browser_tab_event(timestamp);
+
+        CREATE TABLE IF NOT EXISTS application_activity (
+            application_id       TEXT PRIMARY KEY,
+            display_name          TEXT NOT NULL,
+            last_foreground_at    REAL NOT NULL
+        );
+
         CREATE TABLE IF NOT EXISTS diagnosis_event (
             id              INTEGER PRIMARY KEY AUTOINCREMENT,
             start_time      REAL    NOT NULL,
@@ -136,9 +162,25 @@ def init_db():
         ("status", "TEXT"),
         ("create_time", "REAL"),
         ("num_connections", "INTEGER"),
+        ("application_id", "TEXT"),
+        ("display_name", "TEXT"),
+        ("identity_json", "TEXT"),
     ]:
         try:
             cur.execute(f"ALTER TABLE process_snapshot ADD COLUMN {col_name} {col_type}")
+        except Exception:
+            pass
+
+    for col_name, col_type in [
+        ("category", "TEXT"),
+        ("application_id", "TEXT"),
+        ("primary_display_name", "TEXT"),
+        ("primary_pid", "INTEGER"),
+        ("primary_process_name", "TEXT"),
+        ("incident_key", "TEXT"),
+    ]:
+        try:
+            cur.execute(f"ALTER TABLE diagnosis_event ADD COLUMN {col_name} {col_type}")
         except Exception:
             pass
 
@@ -177,4 +219,3 @@ def set_setting(key: str, value: str):
         (key, value)
     )
     conn.commit()
-

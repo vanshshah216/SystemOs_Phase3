@@ -131,9 +131,9 @@ export default function DemoPanel() {
   ];
 
   return (
-    <div className="bg-[#111726] border border-[#1e293b] rounded-xl p-6 sm:p-7 space-y-6">
+    <div className="bg-[#151b23] border border-[#29323d] rounded-xl p-6 sm:p-7 space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#1e293b]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#29323d]">
         <div>
           <span className="text-xs font-mono font-semibold uppercase tracking-wider text-sky-400">
             SIMULATION CONTROLS
@@ -173,7 +173,7 @@ export default function DemoPanel() {
               className={`p-4 rounded-lg border text-left transition-all ${
                 isActive
                   ? "bg-sky-500/10 border-sky-500/40 text-sky-300 shadow-sm"
-                  : "bg-[#0d1322] border-[#1a243a] hover:border-slate-700 text-slate-300 hover:text-white disabled:opacity-40 disabled:hover:border-[#1a243a]"
+                  : "bg-[#11171f] border-[#232d38] hover:border-slate-700 text-slate-300 hover:text-white disabled:opacity-40 disabled:hover:border-[#232d38]"
               }`}
             >
               <div className="flex items-center gap-2 mb-1.5">
@@ -200,7 +200,7 @@ export default function DemoPanel() {
           Observable Simulation Status Panel
         </h4>
 
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 bg-[#0d1322] border border-[#1a243a] rounded-lg p-4 font-mono text-xs">
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 bg-[#11171f] border border-[#232d38] rounded-lg p-4 font-mono text-xs">
           <div>
             <span className="text-slate-500 text-[11px]">Current Mode</span>
             <div className="text-sm font-bold mt-0.5">
@@ -264,8 +264,8 @@ export default function DemoPanel() {
               key={i}
               className={`p-3 rounded-lg border transition-all ${
                 st.done
-                  ? "bg-[#0d1322] border-emerald-500/30 text-slate-200"
-                  : "bg-[#090e18] border-[#1a243a] text-slate-500"
+                  ? "bg-[#11171f] border-emerald-500/30 text-slate-200"
+                  : "bg-[#090e18] border-[#232d38] text-slate-500"
               }`}
             >
               <div className="flex items-center gap-1.5 mb-1 text-[10px]">
@@ -288,9 +288,9 @@ export default function DemoPanel() {
       </div>
 
       {/* SECTION 10: VERIFICATION CHECKLIST & TRANSPARENCY */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-2 border-t border-[#1e293b]">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-2 border-t border-[#29323d]">
         {/* Verification Checklist */}
-        <div className="p-4 rounded-lg bg-[#0d1322] border border-[#1a243a] space-y-2.5 font-mono text-xs">
+        <div className="p-4 rounded-lg bg-[#11171f] border border-[#232d38] space-y-2.5 font-mono text-xs">
           <div className="text-xs font-bold text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
             <ShieldCheck className="w-4 h-4 text-sky-400" />
             Mathematical Pipeline Verification Checklist
@@ -328,7 +328,7 @@ export default function DemoPanel() {
         </div>
 
         {/* Process Attribution Transparency Note */}
-        <div className="p-4 rounded-lg bg-[#0d1322] border border-[#1a243a] space-y-2 text-xs font-sans text-slate-400 flex flex-col justify-between">
+        <div className="p-4 rounded-lg bg-[#11171f] border border-[#232d38] space-y-2 text-xs font-sans text-slate-400 flex flex-col justify-between">
           <div>
             <div className="text-xs font-mono font-bold text-slate-200 uppercase tracking-wider mb-1 flex items-center gap-1.5">
               <Terminal className="w-4 h-4 text-amber-400" />
@@ -339,7 +339,7 @@ export default function DemoPanel() {
             </p>
           </div>
 
-          <div className="pt-2 border-t border-[#1e293b] text-[11px] font-mono text-slate-500">
+          <div className="pt-2 border-t border-[#29323d] text-[11px] font-mono text-slate-500">
             Safety Guarantee: Recommendation-first system; zero automated termination routines.
           </div>
         </div>
@@ -347,7 +347,7 @@ export default function DemoPanel() {
 
       {/* SECTION 11: RECENT SIMULATION AUDIT RUNS */}
       {simRuns.length > 0 && (
-        <div className="space-y-3 pt-2 border-t border-[#1e293b]">
+        <div className="space-y-3 pt-2 border-t border-[#29323d]">
           <h4 className="text-xs font-mono font-semibold uppercase tracking-wider text-slate-300">
             Simulation Audit Run Log (SQLite simulation_run)
           </h4>
@@ -355,7 +355,7 @@ export default function DemoPanel() {
           <div className="overflow-x-auto">
             <table className="w-full text-xs font-mono">
               <thead>
-                <tr className="border-b border-[#1e293b] text-slate-400">
+                <tr className="border-b border-[#29323d] text-slate-400">
                   <th className="text-left py-2 px-3">Run ID</th>
                   <th className="text-left py-2 px-3">Scenario</th>
                   <th className="text-left py-2 px-3">Diagnosis Emitted</th>
@@ -364,7 +364,7 @@ export default function DemoPanel() {
                   <th className="text-right py-2 px-3">Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#1e293b]/50">
+              <tbody className="divide-y divide-[#29323d]/50">
                 {simRuns.slice(0, 5).map((run, i) => (
                   <tr key={i} className="hover:bg-slate-800/30">
                     <td className="py-2.5 px-3 text-slate-400 truncate max-w-[130px]">{run.simulation_id}</td>

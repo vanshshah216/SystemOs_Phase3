@@ -59,8 +59,8 @@ function getClassBadge(activityClass: string) {
       };
     case "Protected/system process":
       return {
-        bg: "bg-purple-500/15 text-purple-300 border-purple-500/30",
-        dot: "bg-purple-400",
+        bg: "bg-sky-500/15 text-sky-300 border-sky-500/30",
+        dot: "bg-sky-400",
         label: "Protected/system process",
       };
     case "Insufficient information":
@@ -85,7 +85,7 @@ function getSafetyBadge(safetyTier: string) {
       return {
         icon: Shield,
         text: "Protected System",
-        className: "text-purple-300 bg-purple-950/40 border-purple-800/40",
+        className: "text-sky-300 bg-sky-950/40 border-sky-800/40",
       };
     case "review_with_caution":
       return {
@@ -130,7 +130,7 @@ export default function ProcessDetailPage({ params }: { params: Promise<{ pid: s
   const recommendations = analysis?.recommendations ?? [];
   const latest = history[history.length - 1];
 
-  const displayName = profile?.name ?? latest?.name ?? `Process ${pid}`;
+  const displayName = profile?.display_name ?? latest?.display_name ?? profile?.name ?? latest?.name ?? `Process ${pid}`;
   const activityClass = profile?.activity_class ?? "Background process";
   const safetyTier = profile?.safety_tier ?? "safe_to_review";
   const classBadge = getClassBadge(activityClass);
@@ -154,7 +154,7 @@ export default function ProcessDetailPage({ params }: { params: Promise<{ pid: s
   const trends = profile?.trends ?? {};
 
   return (
-    <div className="flex-1 flex flex-col min-w-0 bg-[#0b0f17]">
+    <div className="flex-1 flex flex-col min-w-0 bg-[#0d1117]">
       <TopBar title="Process Telemetry & Profiling" subtitle={displayName} />
 
       <main className="flex-1 px-6 sm:px-8 lg:px-10 py-8 max-w-[1440px] w-full mx-auto space-y-8">
@@ -166,8 +166,8 @@ export default function ProcessDetailPage({ params }: { params: Promise<{ pid: s
         </Link>
 
         {/* ── Process Identity & Classification Hero Deck ─────────────────────── */}
-        <div className="bg-[#111726] border border-[#1e293b] rounded-xl p-6 sm:p-7 space-y-5 shadow-sm">
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-[#1e293b]">
+        <div className="bg-[#151b23] border border-[#29323d] rounded-xl p-6 sm:p-7 space-y-5 shadow-sm">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-[#29323d]">
             <div>
               <div className="flex flex-wrap items-center gap-2 mb-2">
                 <span className="text-xs font-mono font-semibold uppercase tracking-wider text-sky-400">
@@ -196,6 +196,11 @@ export default function ProcessDetailPage({ params }: { params: Promise<{ pid: s
               <h2 className="text-2xl sm:text-3xl font-bold text-slate-100 font-mono tracking-tight flex items-center gap-3">
                 <span>{displayName}</span>
               </h2>
+              {(profile?.name ?? latest?.name) && displayName !== (profile?.name ?? latest?.name) && (
+                <div className="mt-1 text-xs font-mono text-slate-500">
+                  Executable: {profile?.name ?? latest?.name}
+                </div>
+              )}
 
               {profile?.parent_name && (
                 <div className="text-xs text-slate-400 font-mono mt-1 flex items-center gap-2">
@@ -209,23 +214,23 @@ export default function ProcessDetailPage({ params }: { params: Promise<{ pid: s
 
             {/* Live Instant Metrics Trio */}
             <div className="grid grid-cols-3 gap-3">
-              <div className="bg-[#0d1322] border border-[#1a243a] rounded-lg p-3 text-right">
+              <div className="bg-[#11171f] border border-[#232d38] rounded-lg p-3 text-right">
                 <div className="text-[10px] text-slate-500 font-mono uppercase">Instant CPU</div>
                 <div className="text-lg font-bold font-mono text-slate-100 mt-0.5">
                   {formatPct(profile?.cpu_percent ?? latest?.cpu_percent)}
                 </div>
               </div>
 
-              <div className="bg-[#0d1322] border border-[#1a243a] rounded-lg p-3 text-right">
+              <div className="bg-[#11171f] border border-[#232d38] rounded-lg p-3 text-right">
                 <div className="text-[10px] text-slate-500 font-mono uppercase">Resident RAM</div>
-                <div className="text-lg font-bold font-mono text-indigo-400 mt-0.5">
+                <div className="text-lg font-bold font-mono text-sky-400 mt-0.5">
                   {profile?.memory_mb
                     ? `${profile.memory_mb.toFixed(1)} MB`
                     : formatBytes(latest?.memory_bytes)}
                 </div>
               </div>
 
-              <div className="bg-[#0d1322] border border-[#1a243a] rounded-lg p-3 text-right">
+              <div className="bg-[#11171f] border border-[#232d38] rounded-lg p-3 text-right">
                 <div className="text-[10px] text-slate-500 font-mono uppercase">Open Sockets</div>
                 <div className="text-lg font-bold font-mono text-sky-400 mt-0.5 flex items-center justify-end gap-1">
                   <Network className="w-4 h-4 text-sky-500" />
@@ -280,8 +285,8 @@ export default function ProcessDetailPage({ params }: { params: Promise<{ pid: s
 
         {/* ── Targeted Recommendations & Evidence (if applicable) ─────────────── */}
         {recommendations.length > 0 && (
-          <div className="bg-[#111726] border border-amber-500/30 rounded-xl p-6 sm:p-7 space-y-4 shadow-sm">
-            <div className="flex items-center gap-2 border-b border-[#1e293b] pb-3">
+          <div className="bg-[#151b23] border border-amber-500/30 rounded-xl p-6 sm:p-7 space-y-4 shadow-sm">
+            <div className="flex items-center gap-2 border-b border-[#29323d] pb-3">
               <Sparkles className="w-5 h-5 text-amber-400" />
               <h3 className="text-base font-bold font-mono text-slate-100">
                 ACTIVE RECOMMENDATION FOR PID {pid}
@@ -298,28 +303,28 @@ export default function ProcessDetailPage({ params }: { params: Promise<{ pid: s
                 </p>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="bg-[#0d1322] p-3 rounded-lg border border-[#1e293b] space-y-1">
+                  <div className="bg-[#11171f] p-3 rounded-lg border border-[#29323d] space-y-1">
                     <span className="text-[10px] uppercase text-slate-500 font-bold">Unusual Pattern Assessment</span>
                     <div className="text-slate-200">{rec.is_usage_unusual}</div>
                   </div>
 
-                  <div className="bg-[#0d1322] p-3 rounded-lg border border-[#1e293b] space-y-1">
+                  <div className="bg-[#11171f] p-3 rounded-lg border border-[#29323d] space-y-1">
                     <span className="text-[10px] uppercase text-slate-500 font-bold">Classification Justification</span>
                     <div className="text-slate-200">{rec.classification_reason}</div>
                   </div>
 
-                  <div className="bg-[#0d1322] p-3 rounded-lg border border-[#1e293b] space-y-1">
+                  <div className="bg-[#11171f] p-3 rounded-lg border border-[#29323d] space-y-1">
                     <span className="text-[10px] uppercase text-slate-500 font-bold">Investigation Advice</span>
                     <div className="text-slate-200">{rec.should_investigate || rec.investigation_advice}</div>
                   </div>
 
-                  <div className="bg-[#0d1322] p-3 rounded-lg border border-[#1e293b] space-y-1">
+                  <div className="bg-[#11171f] p-3 rounded-lg border border-[#29323d] space-y-1">
                     <span className="text-[10px] uppercase text-slate-500 font-bold">Manual Closure Guidance</span>
                     <div className="text-slate-200">{rec.manual_closure_considered || rec.manual_closure_guidance}</div>
                   </div>
                 </div>
 
-                <div className="bg-[#0d1322] p-3.5 rounded-lg border border-amber-500/20 text-amber-300/90">
+                <div className="bg-[#11171f] p-3.5 rounded-lg border border-amber-500/20 text-amber-300/90">
                   <strong className="text-amber-400">Safety & Uncertainty Note:</strong> {rec.safety_and_uncertainty}
                 </div>
 
@@ -349,12 +354,12 @@ export default function ProcessDetailPage({ params }: { params: Promise<{ pid: s
             Loading historical process telemetry...
           </div>
         ) : history.length === 0 ? (
-          <div className="bg-[#111726] border border-[#1e293b] rounded-xl p-12 text-center text-xs text-slate-500 font-mono">
+          <div className="bg-[#151b23] border border-[#29323d] rounded-xl p-12 text-center text-xs text-slate-500 font-mono">
             No telemetry records discovered for PID {pid} within the active 60-minute window.
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="bg-[#111726] border border-[#1e293b] rounded-xl p-6 space-y-4">
+            <div className="bg-[#151b23] border border-[#29323d] rounded-xl p-6 space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Cpu className="w-4 h-4 text-sky-400" />
@@ -372,10 +377,10 @@ export default function ProcessDetailPage({ params }: { params: Promise<{ pid: s
               />
             </div>
 
-            <div className="bg-[#111726] border border-[#1e293b] rounded-xl p-6 space-y-4">
+            <div className="bg-[#151b23] border border-[#29323d] rounded-xl p-6 space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <MemoryStick className="w-4 h-4 text-indigo-400" />
+                  <MemoryStick className="w-4 h-4 text-sky-400" />
                   <h3 className="text-sm font-semibold text-slate-200 font-mono uppercase tracking-wider">
                     Resident Memory Footprint
                   </h3>

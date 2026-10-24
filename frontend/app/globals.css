@@ -1,28 +1,21 @@
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400;1,600&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap');
 @import "tailwindcss";
 
-/* ── Swiss Editorial & Cinematic Journey Design Tokens ───────────────────────────── */
 :root {
-  --bg-app:        #06090e;
-  --bg-surface:    #111726;
-  --bg-card:       #131b2e;
-  --bg-subtle:     #0d1322;
-  --border-subtle: #1e293b;
-  --border-card:   #243048;
-  --text-primary:  #f8fafc;
-  --text-muted:    #94a3b8;
-  --text-dim:      #64748b;
-  --accent-blue:   #0ea5e9;
-  --accent-cyan:   #06b6d4;
-  --accent-emerald:#10b981;
-  --accent-glow:   #34d399;
-  --status-green:  #10b981;
-  --status-amber:  #f59e0b;
-  --status-red:    #ef4444;
-  --font-sans:     'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-mono:     'JetBrains Mono', monospace;
-  --font-serif:    'Playfair Display', 'Cormorant Garamond', Georgia, serif;
-  --font-display:  'Outfit', 'Inter', sans-serif;
+  --bg-app: #0d1117;
+  --bg-surface: #151b23;
+  --bg-card: #171e28;
+  --bg-subtle: #11171f;
+  --border-subtle: #29323d;
+  --border-card: #303a46;
+  --text-primary: #e8edf3;
+  --text-muted: #a0aab7;
+  --text-dim: #7c8795;
+  --accent-blue: #6aa9ff;
+  --status-green: #52b788;
+  --status-amber: #e8ad55;
+  --status-red: #e97878;
+  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: "Cascadia Code", "SFMono-Regular", Consolas, monospace;
 }
 
 *, *::before, *::after {
@@ -33,6 +26,7 @@ html {
   min-height: 100%;
   color-scheme: dark;
   background-color: var(--bg-app);
+  scroll-behavior: smooth;
 }
 
 body {
@@ -47,67 +41,52 @@ body {
   overflow-y: auto;
 }
 
-/* Subtle architectural grid pattern */
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background-image: 
-    linear-gradient(to right, rgba(255, 255, 255, 0.018) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.018) 1px, transparent 1px);
-  background-size: 32px 32px;
-  pointer-events: none;
-  z-index: 0;
-}
-
 /* Scrollbars */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
 }
 ::-webkit-scrollbar-track {
-  background: #0b0f17;
+  background: #0d1117;
 }
 ::-webkit-scrollbar-thumb {
-  background: #243048;
-  border-radius: 4px;
+  background: #303a46;
+  border: 2px solid #0d1117;
+  border-radius: 8px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #334155;
+  background: #45515e;
 }
 
-/* Monospace numerals */
 .font-mono {
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
   font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
 }
 
-/* Typography styles */
+.font-serif-cinematic {
+  font-family: Georgia, "Times New Roman", serif;
+}
+
+.font-display-modern {
+  font-family: var(--font-sans);
+}
+
 .text-balance {
   text-wrap: balance;
 }
 
-/* Recharts styling */
 .recharts-cartesian-grid-horizontal line,
 .recharts-cartesian-grid-vertical line {
-  stroke: #1e293b !important;
+  stroke: #29323d !important;
 }
 .recharts-tooltip-cursor {
-  stroke: #38bdf8 !important;
+  stroke: #6aa9ff !important;
   stroke-dasharray: 4 4;
 }
 
-/* Cinematic Typography */
-.font-serif-cinematic {
-  font-family: var(--font-serif);
-}
-
-.font-display-modern {
-  font-family: var(--font-display);
-}
-
-/* Lenis smooth scrolling */
-html.lenis, html.lenis body {
+html.lenis,
+html.lenis body {
   height: auto;
 }
 
@@ -127,7 +106,6 @@ html.lenis, html.lenis body {
   pointer-events: none;
 }
 
-/* Glassmorphism and Glow Utilities */
 .glass-panel-dock {
   background: rgba(13, 19, 32, 0.72);
   backdrop-filter: blur(20px);
@@ -177,4 +155,25 @@ html.lenis, html.lenis body {
 
 .animate-float {
   animation: floatGentle 5s ease-in-out infinite;
+}
+
+::selection {
+  color: #f4f7fb;
+  background: rgba(106, 169, 255, 0.3);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

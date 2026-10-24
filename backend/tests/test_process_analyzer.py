@@ -21,6 +21,7 @@ Tests:
 """
 
 import time
+import json
 import psutil
 import pytest
 from unittest.mock import patch, MagicMock
@@ -42,6 +43,7 @@ from app.diagnosis.process_analyzer import (
     analyze_processes,
     get_system_network_connections_map,
     get_foreground_process_info,
+    get_active_attribution_map,
 )
 
 
@@ -183,8 +185,7 @@ def test_review_candidate_redundant_helper():
     assert result == CLASS_REVIEW_CANDIDATE
 
 
-def test_review_candidate_sustained_memory_growth():
-    # Monotonic memory growth slope (Rule E candidate)
+def test_memory_growth_observation_does_not_change_activity_classification():
     result = classify_activity(
         name="data_collector.exe",
         pid=9004,
@@ -194,8 +195,78 @@ def test_review_candidate_sustained_memory_growth():
         sample_count=20,
         memory_slope_mb=0.75,
         net_growth_mb=120.0,
+        memory_growth_mb_per_minute=8.0,
+        memory_observation_seconds=900,
+        rising_sample_ratio=0.9,
     )
-    assert result == CLASS_REVIEW_CANDIDATE
+    assert result == CLASS_BACKGROUND_PROC
+
+
+def test_memory_growth_recommendation_requires_material_long_term_trend():
+    profile = {
+        "pid": 9005,
+        "name": "data_collector.exe",
+        "activity_class": CLASS_BACKGROUND_PROC,
+        "safety_tier": "review_with_caution",
+        "memory_mb": 500.0,
+        "cpu_percent": 0.8,
+        "runtime_seconds": 1800.0,
+        "threads": 4,
+        "open_connections": 0,
+        "parent_name": "explorer.exe",
+        "is_foreground": False,
+        "trends": {
+            "sample_count": 30,
+            "growth_mb": 300.0,
+            "memory_growth_mb_per_minute": 20.0,
+            "observation_seconds": 900.0,
+            "rising_sample_ratio": 0.8,
+        },
+    }
+    recommendations = generate_recommendations([profile])
+    assert len(recommendations) == 1
+    assert recommendations[0]["category"] == "memory_growth_observation"
+    assert recommendations[0]["severity"] == "LOW"
+    assert recommendations[0]["reclaimable_memory_mb"] == 0.0
+    assert "not proof of a fault" in recommendations[0]["is_usage_unusual"].lower()
+
+    profile["trends"] = {
+        "sample_count": 30,
+        "growth_mb": 39.0,
+        "memory_growth_mb_per_minute": 2.6,
+        "observation_seconds": 900.0,
+        "rising_sample_ratio": 0.8,
+    }
+    assert generate_recommendations([profile]) == []
+
+
+def test_memory_growth_observation_is_not_treated_as_active_anomaly_attribution():
+    rows = [
+        {
+            "id": 1,
+            "severity": "LOW",
+            "probable_cause": "Gradual memory increase observed for Chrome",
+            "primary_process": "Chrome",
+            "start_time": 1000,
+            "status": "active",
+            "evidence_json": json.dumps({"raw_stats": {"rule_id": "E"}}),
+        },
+        {
+            "id": 2,
+            "severity": "HIGH",
+            "probable_cause": "Sustained CPU contention",
+            "primary_process": "worker.exe",
+            "start_time": 1001,
+            "status": "active",
+            "evidence_json": json.dumps({"raw_stats": {"rule_id": "A"}}),
+        },
+    ]
+    with patch("app.diagnosis.process_analyzer.get_connection") as mock_connection:
+        mock_connection.return_value.execute.return_value.fetchall.return_value = rows
+        attribution = get_active_attribution_map()
+
+    assert "chrome" not in attribution
+    assert "worker.exe" in attribution
 
 
 # ── 4. Evidence-Based Recommendations Tests (All 7 Dimensions) ─────────────────
@@ -631,4 +702,3 @@ def test_collector_telemetry_snapshot_execution():
     assert "name" in first
     assert "cpu_percent" in first
     assert "memory_percent" in first
-

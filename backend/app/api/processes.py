@@ -25,9 +25,9 @@ _CPU_COUNT = max(psutil.cpu_count(logical=True) or 1, 1)
 @router.get("")
 def get_processes(
     sort_by: str = Query("cpu_percent", description="cpu_percent | memory_bytes | io"),
-    limit: int = Query(50),
+    limit: int = Query(50, ge=1, le=500),
 ):
-    """Return current process list, sorted by the specified field. Excludes PID 0."""
+    """Return the exact latest collector snapshot, sorted by a supported field."""
     conn = get_connection()
     latest = conn.execute(
         "SELECT MAX(timestamp) as ts FROM process_snapshot WHERE is_demo=0"
@@ -44,17 +44,15 @@ def get_processes(
 
     rows = conn.execute(f"""
         SELECT pid, name, cpu_percent, memory_percent, memory_bytes,
-               threads, io_read_bytes, io_write_bytes
+               threads, io_read_bytes, io_write_bytes, display_name,
+               application_id, status, create_time, ppid
         FROM process_snapshot
-        WHERE timestamp BETWEEN ? AND ? 
-          AND is_demo = 0 
+        WHERE timestamp=? AND is_demo=0
           AND pid > 0
           AND LOWER(name) NOT LIKE '%idle%'
-        GROUP BY pid
-        HAVING timestamp = MAX(timestamp)
         ORDER BY {order}
         LIMIT ?
-    """, (ts - 5, ts + 1, limit)).fetchall()
+    """, (ts, limit)).fetchall()
 
     # Normalise cpu_percent per-core
     result = []
@@ -64,7 +62,7 @@ def get_processes(
             d["cpu_percent"] = round(d["cpu_percent"] / _CPU_COUNT, 1)
         result.append(d)
 
-    return {"processes": result}
+    return {"timestamp": ts, "processes": result}
 
 
 # ── Phase 3 Process Analyzer Endpoints ─────────────────────────────────────────
@@ -171,7 +169,7 @@ def get_process_history(
     start = start or (now - 3600)
 
     rows = conn.execute("""
-        SELECT timestamp, pid, name, cpu_percent, memory_percent,
+        SELECT timestamp, pid, name, display_name, cpu_percent, memory_percent,
                memory_bytes, threads, io_read_bytes, io_write_bytes
         FROM process_snapshot
         WHERE pid=? AND timestamp BETWEEN ? AND ?

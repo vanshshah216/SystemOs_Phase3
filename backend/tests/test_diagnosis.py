@@ -3,6 +3,7 @@ tests/test_diagnosis.py – Unit tests for the diagnosis pipeline.
 Run: pytest tests/test_diagnosis.py -v
 """
 
+import json
 import pytest
 from unittest.mock import patch, MagicMock
 
@@ -17,6 +18,7 @@ from app.diagnosis.rules        import (
     rule_e_process_memory_growth,
     evaluate_rules,
 )
+from app.api.events import _format_event
 
 
 # ── Helpers ────────────────────────────────────────────────────────────────────
@@ -152,24 +154,89 @@ def test_rule_d_fires():
 def test_rule_e_fires_on_significant_growth():
     result = rule_e_process_memory_growth(
         process_name="Chrome",
-        memory_slope=2.0 * 1024 * 1024,  # 2 MB/sample
+        memory_slope=2.0 * 1024 * 1024,
         sample_count=25,
-        current_bytes=4e9,
+        current_bytes=1.6e9,
         baseline_bytes=1e9,
+        observation_seconds=900,
+        rising_sample_ratio=0.8,
+        observation_start_time=1000,
     )
     assert result is not None
     assert result.rule_id == "E"
-    assert "not a confirmed memory leak" in " ".join(result.evidence_items).lower()
+    assert result.severity == "LOW"
+    assert result.evidence_strength is None
+    assert "not proof of a fault or slowdown" in " ".join(result.evidence_items).lower()
+    assert result.raw_stats["observation_seconds"] == 900
 
 def test_rule_e_does_not_fire_on_small_growth():
     result = rule_e_process_memory_growth(
         process_name="Chrome",
-        memory_slope=0.1 * 1024 * 1024,  # Only 0.1 MB/sample
-        sample_count=25,
-        current_bytes=1.1e9,
+        memory_slope=2.0 * 1024 * 1024,
+        sample_count=40,
+        current_bytes=1.039e9,
         baseline_bytes=1.0e9,
+        observation_seconds=1200,
+        rising_sample_ratio=0.9,
     )
     assert result is None
+
+
+def test_rule_e_rejects_short_observation_even_with_large_growth():
+    result = rule_e_process_memory_growth(
+        process_name="Chrome",
+        memory_slope=5.0 * 1024 * 1024,
+        sample_count=30,
+        current_bytes=1.8e9,
+        baseline_bytes=1e9,
+        observation_seconds=600,
+        rising_sample_ratio=0.9,
+    )
+    assert result is None
+
+
+def test_rule_e_rejects_insufficient_samples_and_noisy_trend():
+    base = {
+        "process_name": "Chrome",
+        "memory_slope": 2.0 * 1024 * 1024,
+        "current_bytes": 1.8e9,
+        "baseline_bytes": 1e9,
+        "observation_seconds": 1200,
+        "rising_sample_ratio": 0.9,
+    }
+    assert rule_e_process_memory_growth(sample_count=10, **base) is None
+    assert rule_e_process_memory_growth(sample_count=30, **{**base, "rising_sample_ratio": 0.4}) is None
+
+
+def test_legacy_memory_growth_event_is_presented_as_neutral_observation():
+    event = _format_event({
+        "id": 42,
+        "start_time": 1000.0,
+        "end_time": None,
+        "severity": "MEDIUM",
+        "probable_cause": "Sustained unusual memory growth in Chrome.exe",
+        "primary_process": "Chrome.exe",
+        "primary_process_name": "Chrome.exe",
+        "primary_display_name": "Google Chrome",
+        "primary_pid": 1234,
+        "application_id": None,
+        "incident_key": "E:1234",
+        "category": "memory",
+        "status": "active",
+        "created_at": 1000.0,
+        "is_demo": 0,
+        "evidence_json": json.dumps({
+            "evidence_items": ["Old misleading diagnostic language"],
+            "evidence_strength": {"score": 80},
+            "raw_stats": {},
+        }),
+    }, full=True)
+
+    assert event["severity"] == "LOW"
+    assert event["probable_cause"] == "Gradual memory increase observed for Google Chrome"
+    assert event["evidence"]["evidence_strength"] is None
+    assert event["evidence"]["raw_stats"]["rule_id"] == "E"
+    assert "not confirmation" in " ".join(event["evidence"]["evidence_items"]).lower()
 
 
 # ── Evidence strength ──────────────────────────────────────────────────────────

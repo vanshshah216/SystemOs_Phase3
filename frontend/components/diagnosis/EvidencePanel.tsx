@@ -9,9 +9,9 @@ interface EvidencePanelProps {
 const componentDefs = [
   { key: "A", label: "Anomaly Severity",       weight: "30%", color: "from-rose-500 to-red-600" },
   { key: "P", label: "Persistence Multiplier", weight: "25%", color: "from-amber-500 to-orange-600" },
-  { key: "C", label: "Process Attribution",    weight: "20%", color: "from-cyan-500 to-blue-600" },
+  { key: "C", label: "Process Attribution",    weight: "20%", color: "from-sky-500 to-blue-600" },
   { key: "R", label: "Cross-Resource Corroboration", weight: "15%", color: "from-emerald-500 to-teal-600" },
-  { key: "T", label: "Trend Acceleration",     weight: "10%", color: "from-purple-500 to-indigo-600" },
+  { key: "T", label: "Trend Acceleration",     weight: "10%", color: "from-sky-500 to-sky-600" },
 ];
 
 export default function EvidencePanel({ strength }: EvidencePanelProps) {

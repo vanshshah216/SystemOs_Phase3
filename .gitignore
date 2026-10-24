@@ -11,3 +11,7 @@ out/
 __pycache__/
 *.pyc
 "@ | Set-Content .gitignore
+# Local runtime database files
+backend/systemos.db
+backend/systemos.db-shm
+backend/systemos.db-wal

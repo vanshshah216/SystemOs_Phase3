@@ -6,6 +6,14 @@ import {
 import { formatTimestamp } from "@/lib/utils";
 import type { HistoryPoint } from "@/types";
 
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: Array<{ value?: number | string }>;
+  label?: number | string;
+  unit?: string;
+  formatY?: (value: number) => string;
+}
+
 interface MetricChartProps {
   data: HistoryPoint[];
   color?: string;
@@ -15,16 +23,18 @@ interface MetricChartProps {
   height?: number;
   formatY?: (v: number) => string;
   anomalyThreshold?: number | null;
+  error?: string | null;
 }
 
-const CustomTooltip = ({ active, payload, label, unit = "", formatY }: any) => {
+const CustomTooltip = ({ active, payload, label, unit = "", formatY }: CustomTooltipProps) => {
   if (!active || !payload?.length) return null;
-  const val = payload[0]?.value;
+  const rawValue = payload[0]?.value;
+  const val = typeof rawValue === "number" ? rawValue : Number(rawValue);
   return (
     <div className="bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-xs font-mono shadow-xl">
       <div className="text-gray-400 mb-1">{formatTimestamp(Number(label))}</div>
       <div className="text-white font-semibold">
-        {formatY ? formatY(val) : `${val?.toFixed(1)}${unit}`}
+        {formatY ? formatY(val) : `${val.toFixed(1)}${unit}`}
       </div>
     </div>
   );
@@ -39,11 +49,12 @@ export default function MetricChart({
   height = 160,
   formatY,
   anomalyThreshold,
+  error,
 }: MetricChartProps) {
   if (!data.length) {
     return (
       <div className={`flex items-center justify-center text-gray-600 text-xs font-mono`} style={{ height }}>
-        Collecting data…
+        {error ? `Telemetry unavailable: ${error}` : "Collecting data…"}
       </div>
     );
   }

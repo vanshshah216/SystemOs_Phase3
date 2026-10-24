@@ -3,9 +3,9 @@ import { useState, useMemo } from "react";
 import TopBar from "@/components/layout/TopBar";
 import MetricChart from "@/components/charts/MetricChart";
 import { useMetricHistory, useCurrentMetrics } from "@/hooks/useMetrics";
-import { formatBytes, formatPct, timeRangeToSeconds } from "@/lib/utils";
+import { formatBytes, timeRangeToSeconds } from "@/lib/utils";
 import type { MetricKey } from "@/types";
-import { Clock, Cpu, MemoryStick, HardDrive, Network } from "lucide-react";
+import { Clock, Cpu, MemoryStick, HardDrive, Network, type LucideIcon } from "lucide-react";
 import Tooltip from "@/components/common/Tooltip";
 
 const TIME_RANGES = ["5m", "15m", "30m", "1h", "6h", "24h"];
@@ -14,7 +14,7 @@ interface MetricConfig {
   key: MetricKey;
   name: string;
   unit: string;
-  icon: any;
+  icon: LucideIcon;
   color: string;
   formatY: (v: number) => string;
 }
@@ -29,7 +29,7 @@ const METRIC_CONFIGS: MetricConfig[] = [
 ];
 
 function MetricSectionCard({ config, rangeSeconds }: { config: MetricConfig; rangeSeconds: number }) {
-  const { data: history } = useMetricHistory(config.key, rangeSeconds, 4000);
+  const { data: history, error: historyError } = useMetricHistory(config.key, rangeSeconds, 4000);
   const { data: currentMetrics } = useCurrentMetrics(3000);
 
   const Icon = config.icon;
@@ -71,7 +71,7 @@ function MetricSectionCard({ config, rangeSeconds }: { config: MetricConfig; ran
   }
 
   return (
-    <div className="bg-[#111726] border border-[#1e293b] rounded-xl p-6 space-y-4 hover:border-slate-700 transition-colors">
+    <div className="bg-[#151b23] border border-[#29323d] rounded-xl p-6 space-y-4 hover:border-slate-700 transition-colors">
       {/* Top row */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2.5">
@@ -94,7 +94,7 @@ function MetricSectionCard({ config, rangeSeconds }: { config: MetricConfig; ran
       </div>
 
       {/* 5 Statistics Strip: Current, Average, Peak, Baseline, Status */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-[#0d1322] border border-[#1a243a] rounded-lg p-3 text-xs font-mono">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-[#11171f] border border-[#232d38] rounded-lg p-3 text-xs font-mono">
         <div>
           <span className="text-slate-500 text-[11px]">Current</span>
           <div className="text-base font-bold text-slate-100 mt-0.5">
@@ -133,6 +133,7 @@ function MetricSectionCard({ config, rangeSeconds }: { config: MetricConfig; ran
           color={config.color}
           label={config.name}
           formatY={config.formatY}
+          error={historyError}
           baseline={ctx?.mean ?? undefined}
           anomalyThreshold={ctx?.percentile_95 ?? undefined}
           height={220}
@@ -147,7 +148,7 @@ export default function LiveMetricsPage() {
   const rangeSeconds = timeRangeToSeconds(range);
 
   return (
-    <div className="flex-1 flex flex-col min-w-0 bg-[#0b0f17]">
+    <div className="flex-1 flex flex-col min-w-0 bg-[#0d1117]">
       <TopBar title="Live Metrics" subtitle="Multi-Channel Telemetry" />
 
       <main className="flex-1 px-6 sm:px-8 lg:px-10 py-8 max-w-[1440px] w-full mx-auto space-y-8">
@@ -155,14 +156,14 @@ export default function LiveMetricsPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-100 font-sans">
-              LIVE METRICS
+              Live metrics
             </h2>
             <p className="text-sm text-slate-400 font-sans mt-1">
               High-frequency system performance and historical baselines across all monitored vectors.
             </p>
           </div>
 
-          <div className="flex items-center gap-1 bg-[#090e18] p-1 rounded-lg border border-[#1e293b] self-start sm:self-center">
+          <div className="flex items-center gap-1 bg-[#090e18] p-1 rounded-lg border border-[#29323d] self-start sm:self-center">
             <Clock className="w-3.5 h-3.5 text-slate-500 ml-2 mr-1" />
             {TIME_RANGES.map(r => (
               <button

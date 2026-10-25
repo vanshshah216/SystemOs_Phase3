@@ -31,9 +31,9 @@ const CustomTooltip = ({ active, payload, label, unit = "", formatY }: CustomToo
   const rawValue = payload[0]?.value;
   const val = typeof rawValue === "number" ? rawValue : Number(rawValue);
   return (
-    <div className="bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-xs font-mono shadow-xl">
-      <div className="text-gray-400 mb-1">{formatTimestamp(Number(label))}</div>
-      <div className="text-white font-semibold">
+    <div className="bg-white/95 backdrop-blur-xl border border-[#E5EAF1] rounded-xl px-3.5 py-2 text-xs font-mono shadow-xl text-[#172033]">
+      <div className="text-[#667085] text-[11px] mb-1 font-sans">{formatTimestamp(Number(label))}</div>
+      <div className="text-[#172033] font-bold text-sm">
         {formatY ? formatY(val) : `${val.toFixed(1)}${unit}`}
       </div>
     </div>
@@ -42,7 +42,7 @@ const CustomTooltip = ({ active, payload, label, unit = "", formatY }: CustomToo
 
 export default function MetricChart({
   data,
-  color = "#34d399",
+  color = "#2563EB",
   label = "",
   unit = "",
   baseline,
@@ -53,8 +53,8 @@ export default function MetricChart({
 }: MetricChartProps) {
   if (!data.length) {
     return (
-      <div className={`flex items-center justify-center text-gray-600 text-xs font-mono`} style={{ height }}>
-        {error ? `Telemetry unavailable: ${error}` : "Collecting data…"}
+      <div className="flex items-center justify-center text-[#98A2B3] text-xs font-mono" style={{ height }}>
+        {error ? `Telemetry unavailable: ${error}` : "Collecting baseline data…"}
       </div>
     );
   }
@@ -63,21 +63,21 @@ export default function MetricChart({
 
   return (
     <ResponsiveContainer width="100%" height={height}>
-      <LineChart data={chartData} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" vertical={false} />
+      <LineChart data={chartData} margin={{ top: 6, right: 6, bottom: 0, left: 0 }}>
+        <CartesianGrid strokeDasharray="3 3" stroke="#E5EAF1" vertical={false} />
         <XAxis
           dataKey="t"
-          tick={{ fill: "#4b5563", fontSize: 9, fontFamily: "monospace" }}
+          tick={{ fill: "#667085", fontSize: 10, fontFamily: "monospace" }}
           tickFormatter={v => formatTimestamp(v)}
           tickLine={false}
-          axisLine={false}
+          axisLine={{ stroke: "#E5EAF1" }}
           interval="preserveStartEnd"
         />
         <YAxis
-          tick={{ fill: "#4b5563", fontSize: 9, fontFamily: "monospace" }}
+          tick={{ fill: "#667085", fontSize: 10, fontFamily: "monospace" }}
           tickLine={false}
           axisLine={false}
-          width={36}
+          width={38}
           tickFormatter={v => formatY ? formatY(v) : `${v}${unit}`}
         />
         <Tooltip content={<CustomTooltip unit={unit} formatY={formatY} />} />
@@ -86,10 +86,10 @@ export default function MetricChart({
         {baseline != null && (
           <ReferenceLine
             y={baseline}
-            stroke="#6b7280"
+            stroke="#94A3B8"
             strokeDasharray="4 3"
             strokeWidth={1}
-            label={{ value: "baseline", fill: "#6b7280", fontSize: 8, fontFamily: "monospace" }}
+            label={{ value: "baseline", fill: "#667085", fontSize: 9, fontFamily: "monospace", position: "insideTopRight" }}
           />
         )}
 
@@ -97,10 +97,10 @@ export default function MetricChart({
         {anomalyThreshold != null && (
           <ReferenceLine
             y={anomalyThreshold}
-            stroke="#f97316"
+            stroke="#DC2626"
             strokeDasharray="3 2"
             strokeWidth={1}
-            label={{ value: "P95", fill: "#f97316", fontSize: 8 }}
+            label={{ value: "P95", fill: "#DC2626", fontSize: 9, fontFamily: "monospace", position: "insideTopRight" }}
           />
         )}
 
@@ -108,9 +108,9 @@ export default function MetricChart({
           type="monotone"
           dataKey="v"
           stroke={color}
-          strokeWidth={1.5}
+          strokeWidth={2}
           dot={false}
-          activeDot={{ r: 3, fill: color }}
+          activeDot={{ r: 4, fill: color, stroke: "#FFFFFF", strokeWidth: 2 }}
           isAnimationActive={false}
         />
       </LineChart>

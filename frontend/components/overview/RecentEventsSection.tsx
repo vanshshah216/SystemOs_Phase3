@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { formatDateTime, formatDuration } from "@/lib/utils";
 import type { DiagnosisEvent } from "@/types";
-import { ChevronRight, History, ArrowRight } from "lucide-react";
+import { ChevronRight, ArrowRight } from "lucide-react";
 
 interface RecentEventsSectionProps {
   events: DiagnosisEvent[];
@@ -13,24 +13,24 @@ export default function RecentEventsSection({ events, loading }: RecentEventsSec
   const displayEvents = events.slice(0, 5);
 
   return (
-    <div className="bg-[#151b23] border border-[#29323d] rounded-xl p-6 sm:p-7 space-y-4">
+    <div className="liquid-glass-card p-6 sm:p-7 space-y-4 shadow-xs">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-[#29323d]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-[#EDF0F5]">
         <div>
-          <span className="text-xs font-mono font-semibold uppercase tracking-wider text-sky-400">
-            AUDIT TRAIL
+          <span className="text-xs font-mono font-bold uppercase tracking-wider text-[#2563EB]">
+            Audit Trail
           </span>
-          <h3 className="text-lg font-bold text-slate-100 font-sans mt-0.5">
-            Recent Events
+          <h3 className="text-lg font-bold text-[#172033] font-sans mt-0.5">
+            Recent Incidents & Observations
           </h3>
-          <p className="text-xs text-slate-400 font-sans mt-0.5">
-            Chronological record of diagnosed performance anomalies and state resolutions.
+          <p className="text-xs text-[#667085] font-sans mt-0.5">
+            Chronological audit log of diagnosed system anomalies and state resolutions.
           </p>
         </div>
 
         <Link
           href="/events"
-          className="text-xs font-mono text-sky-400 hover:text-sky-300 font-medium inline-flex items-center gap-1 shrink-0 self-start sm:self-center"
+          className="text-xs font-mono text-[#2563EB] hover:text-[#1D4ED8] font-semibold inline-flex items-center gap-1 shrink-0 self-start sm:self-center transition-colors"
         >
           View all events <ArrowRight className="w-3.5 h-3.5" />
         </Link>
@@ -38,28 +38,28 @@ export default function RecentEventsSection({ events, loading }: RecentEventsSec
 
       {/* Table / List */}
       {loading && events.length === 0 ? (
-        <div className="py-8 text-center text-xs font-mono text-slate-500">
+        <div className="py-8 text-center text-xs font-mono text-[#98A2B3]">
           Loading event audit log...
         </div>
       ) : displayEvents.length === 0 ? (
-        <div className="py-8 text-center text-xs font-mono text-slate-500">
+        <div className="py-8 text-center text-xs font-mono text-[#98A2B3]">
           No diagnostic events recorded yet. System is performing within healthy statistical bounds.
         </div>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-xs font-mono">
             <thead>
-              <tr className="border-b border-[#29323d] text-slate-400">
-                <th className="text-left py-3 px-3 font-semibold">Severity</th>
-                <th className="text-left py-3 px-3 font-semibold">Probable Cause</th>
-                <th className="text-left py-3 px-3 font-semibold">Primary Process</th>
-                <th className="text-left py-3 px-3 font-semibold">Duration</th>
-                <th className="text-left py-3 px-3 font-semibold">Timestamp</th>
-                <th className="text-left py-3 px-3 font-semibold">Status</th>
+              <tr className="border-b border-[#EDF0F5] text-[#667085]">
+                <th className="text-left py-3 px-3 font-bold">Severity</th>
+                <th className="text-left py-3 px-3 font-bold">Probable Cause</th>
+                <th className="text-left py-3 px-3 font-bold">Primary Process</th>
+                <th className="text-left py-3 px-3 font-bold">Duration</th>
+                <th className="text-left py-3 px-3 font-bold">Timestamp</th>
+                <th className="text-left py-3 px-3 font-bold">Status</th>
                 <th className="py-3 px-3"></th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#29323d]/60">
+            <tbody className="divide-y divide-[#EDF0F5]">
               {displayEvents.map(event => {
                 const isHigh = event.severity === "HIGH";
                 const isMedium = event.severity === "MEDIUM";
@@ -68,51 +68,51 @@ export default function RecentEventsSection({ events, loading }: RecentEventsSec
                 return (
                   <tr
                     key={event.id}
-                    className="hover:bg-slate-800/40 transition-colors group cursor-pointer"
+                    className="hover:bg-[#F8FAFC] transition-colors group cursor-pointer"
                   >
                     <td className="py-3.5 px-3">
                       <span
-                        className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold border ${
+                        className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
                           isHigh
-                            ? "bg-rose-500/10 text-rose-400 border-rose-500/30"
+                            ? "bg-[#FEF2F2] text-[#DC2626] border-[#FECACA]"
                             : isMedium
-                            ? "bg-amber-500/10 text-amber-400 border-amber-500/30"
-                            : "bg-sky-500/10 text-sky-400 border-sky-500/30"
+                            ? "bg-[#FFFBEB] text-[#D97706] border-[#FDE68A]"
+                            : "bg-[#EFF6FF] text-[#2563EB] border-[#BFDBFE]"
                         }`}
                       >
                         {event.severity}
                       </span>
                     </td>
 
-                    <td className="py-3.5 px-3 text-slate-200 font-semibold max-w-xs truncate">
-                      <Link href={`/events/${event.id}`} className="hover:text-sky-400">
+                    <td className="py-3.5 px-3 text-[#172033] font-bold max-w-xs truncate">
+                      <Link href={`/events/${event.id}`} className="hover:text-[#2563EB] transition-colors">
                         {event.probable_cause}
                       </Link>
                     </td>
 
-                    <td className="py-3.5 px-3 text-slate-300 font-medium">
+                    <td className="py-3.5 px-3 text-[#667085] font-semibold">
                       {event.primary_display_name || event.primary_process || "—"}
                     </td>
 
-                    <td className="py-3.5 px-3 text-slate-400">
+                    <td className="py-3.5 px-3 text-[#667085]">
                       {formatDuration(event.start_time, event.end_time)}
                     </td>
 
-                    <td className="py-3.5 px-3 text-slate-400 whitespace-nowrap">
+                    <td className="py-3.5 px-3 text-[#98A2B3] whitespace-nowrap">
                       {formatDateTime(event.start_time)}
                     </td>
 
                     <td className="py-3.5 px-3">
                       <span
-                        className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-semibold ${
+                        className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold border ${
                           isActive
-                            ? "bg-rose-500/10 text-rose-400 border border-rose-500/20"
-                            : "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                            ? "bg-[#FEF2F2] text-[#DC2626] border-[#FECACA]"
+                            : "bg-[#F0FDF4] text-[#16A34A] border-[#BBF7D0]"
                         }`}
                       >
                         <span
                           className={`w-1.5 h-1.5 rounded-full ${
-                            isActive ? "bg-rose-400 animate-pulse" : "bg-emerald-400"
+                            isActive ? "bg-[#DC2626] animate-pulse" : "bg-[#16A34A]"
                           }`}
                         />
                         {isActive ? "Active" : "Resolved"}
@@ -122,7 +122,7 @@ export default function RecentEventsSection({ events, loading }: RecentEventsSec
                     <td className="py-3.5 px-3 text-right">
                       <Link
                         href={`/events/${event.id}`}
-                        className="p-1 rounded text-slate-500 hover:text-sky-400 inline-flex"
+                        className="p-1 rounded-lg text-[#98A2B3] hover:text-[#2563EB] hover:bg-[#EFF6FF] inline-flex transition-colors"
                       >
                         <ChevronRight className="w-4 h-4" />
                       </Link>

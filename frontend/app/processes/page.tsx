@@ -50,39 +50,39 @@ function getClassBadge(activityClass: string) {
   switch (activityClass) {
     case "Active application":
       return {
-        bg: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
-        dot: "bg-emerald-400",
+        bg: "bg-[#F0FDF4] text-[#16A34A] border-[#BBF7D0]",
+        dot: "bg-[#16A34A]",
         label: "Active application",
       };
     case "High resource consumer":
       return {
-        bg: "bg-sky-500/10 text-sky-300 border-sky-500/25",
-        dot: "bg-sky-400",
+        bg: "bg-[#EFF6FF] text-[#2563EB] border-[#BFDBFE]",
+        dot: "bg-[#2563EB]",
         label: "High resource consumer",
       };
     case "Review candidate":
       return {
-        bg: "bg-amber-500/15 text-amber-400 border-amber-500/30",
-        dot: "bg-amber-400",
+        bg: "bg-[#FFFBEB] text-[#D97706] border-[#FDE68A]",
+        dot: "bg-[#D97706]",
         label: "Review candidate",
       };
     case "Protected/system process":
       return {
-        bg: "bg-sky-500/15 text-sky-300 border-sky-500/30",
-        dot: "bg-sky-400",
-        label: "Protected/system process",
+        bg: "bg-[#F5F3FF] text-[#7C3AED] border-[#DDD6FE]",
+        dot: "bg-[#7C3AED]",
+        label: "Protected system",
       };
     case "Insufficient information":
       return {
-        bg: "bg-slate-700/30 text-slate-400 border-slate-600/30",
-        dot: "bg-slate-500",
+        bg: "bg-[#F1F4F8] text-[#667085] border-[#E5EAF1]",
+        dot: "bg-[#98A2B3]",
         label: "Insufficient info",
       };
     case "Background process":
     default:
       return {
-        bg: "bg-sky-500/10 text-sky-400 border-sky-500/20",
-        dot: "bg-sky-400",
+        bg: "bg-[#F8FAFC] text-[#667085] border-[#E5EAF1]",
+        dot: "bg-[#98A2B3]",
         label: "Background process",
       };
   }
@@ -94,26 +94,26 @@ function getSafetyBadge(safetyTier: string) {
       return {
         icon: Shield,
         text: "Protected System",
-        className: "text-sky-300 bg-sky-950/40 border-sky-800/40",
+        className: "text-[#7C3AED] bg-[#F5F3FF] border-[#DDD6FE]",
       };
     case "review_with_caution":
       return {
         icon: AlertTriangle,
         text: "Review Caution",
-        className: "text-amber-300 bg-amber-950/40 border-amber-800/40",
+        className: "text-[#D97706] bg-[#FFFBEB] border-[#FDE68A]",
       };
     case "safe_to_review":
       return {
         icon: CheckCircle2,
         text: "Safe to Review",
-        className: "text-emerald-300 bg-emerald-950/40 border-emerald-800/40",
+        className: "text-[#16A34A] bg-[#F0FDF4] border-[#BBF7D0]",
       };
     case "uncertain":
     default:
       return {
         icon: AlertCircle,
         text: "Unverified",
-        className: "text-slate-400 bg-slate-900 border-slate-700/50",
+        className: "text-[#667085] bg-[#F1F4F8] border-[#E5EAF1]",
       };
   }
 }
@@ -131,26 +131,32 @@ function ApplicationRows({
 }) {
   return (
     <>
-      <tr className="hover:bg-slate-800/40">
-        <td className="p-3">
-          <div className="font-semibold text-slate-100">{application.display_name}</div>
-          <div className="mt-1 text-[10px] text-slate-500">
+      <tr className="hover:bg-[#F8FAFC] transition-colors">
+        <td className="p-3.5">
+          <div className="font-bold text-[#172033]">{application.display_name}</div>
+          <div className="mt-1 text-[11px] text-[#667085]">
             {application.is_fallback_label ? "Unidentified · " : ""}
             {application.role.replace(/_/g, " ")}
             {application.is_foreground ? " · foreground window" : " · running in background"}
           </div>
         </td>
-        <td className="p-3 text-right text-sky-300">{application.cpu_percent.toFixed(1)}%</td>
-        <td className="p-3 text-right text-slate-200">{memoryMb >= 1024 ? `${(memoryMb / 1024).toFixed(2)} GB` : `${memoryMb.toFixed(1)} MB`}</td>
-        <td className="p-3 text-right text-slate-300">{application.memory_percent.toFixed(1)}%</td>
-        <td className="p-3 text-right text-slate-300">{application.process_count}</td>
-        <td className="p-3 text-slate-400">{application.is_foreground ? "Foreground" : "Running"}</td>
-        <td className="p-3 text-center">
+        <td className="p-3.5 text-right font-bold text-[#2563EB]">{application.cpu_percent.toFixed(1)}%</td>
+        <td className="p-3.5 text-right font-bold text-[#172033]">{memoryMb >= 1024 ? `${(memoryMb / 1024).toFixed(2)} GB` : `${memoryMb.toFixed(1)} MB`}</td>
+        <td className="p-3.5 text-right font-medium text-[#667085]">{application.memory_percent.toFixed(1)}%</td>
+        <td className="p-3.5 text-right font-medium text-[#172033]">{application.process_count}</td>
+        <td className="p-3.5">
+          <span className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-semibold border ${
+            application.is_foreground ? "bg-[#F0FDF4] text-[#16A34A] border-[#BBF7D0]" : "bg-[#F8FAFC] text-[#667085] border-[#E5EAF1]"
+          }`}>
+            {application.is_foreground ? "Foreground" : "Running"}
+          </span>
+        </td>
+        <td className="p-3.5 text-center">
           <button
             type="button"
             onClick={onToggle}
             aria-expanded={expanded}
-            className="text-sky-300 hover:text-sky-100"
+            className="text-xs font-semibold text-[#2563EB] hover:text-[#1D4ED8] hover:underline"
           >
             {expanded ? "Hide" : "Inspect"}
           </button>
@@ -158,21 +164,21 @@ function ApplicationRows({
       </tr>
       {expanded && (
         <tr>
-          <td colSpan={7} className="bg-[#11171f] px-4 py-3">
+          <td colSpan={7} className="bg-[#F8FAFC] px-4 py-3.5 border-y border-[#E5EAF1]">
             <div className="space-y-2">
               {application.processes.map(process => (
-                <div key={process.pid} className="grid grid-cols-2 gap-2 rounded border border-[#29323d] p-3 text-[11px] sm:grid-cols-6">
-                  <Link href={`/processes/${process.pid}`} className="flex min-w-0 flex-col truncate text-sky-300 hover:text-sky-100" title={process.process_name}>
+                <div key={process.pid} className="grid grid-cols-2 gap-2 rounded-xl bg-white border border-[#E5EAF1] p-3 text-[11px] sm:grid-cols-6 shadow-2xs">
+                  <Link href={`/processes/${process.pid}`} className="flex min-w-0 flex-col truncate text-[#2563EB] hover:underline font-semibold" title={process.process_name}>
                     <span className="truncate">{process.display_name || process.process_name}</span>
                     {process.display_name && process.display_name !== process.process_name && (
-                      <span className="truncate text-[10px] text-slate-500">{process.process_name}</span>
+                      <span className="truncate text-[10px] text-[#98A2B3] font-normal">{process.process_name}</span>
                     )}
                   </Link>
-                  <span className="text-slate-400">PID {process.pid}</span>
-                  <span className="text-slate-300">{process.cpu_percent.toFixed(1)}% CPU</span>
-                  <span className="text-slate-300">{(process.memory_bytes / (1024 * 1024)).toFixed(1)} MB RSS</span>
-                  <span className="text-slate-400">{process.status ?? "Unavailable"}</span>
-                  <span className="text-slate-500">{process.is_foreground ? "Foreground" : `Parent PID ${process.parent_pid ?? "—"}`}</span>
+                  <span className="text-[#667085] font-medium">PID {process.pid}</span>
+                  <span className="text-[#2563EB] font-bold">{process.cpu_percent.toFixed(1)}% CPU</span>
+                  <span className="text-[#172033] font-semibold">{(process.memory_bytes / (1024 * 1024)).toFixed(1)} MB RSS</span>
+                  <span className="text-[#667085]">{process.status ?? "Available"}</span>
+                  <span className="text-[#98A2B3]">{process.is_foreground ? "Foreground" : `Parent PID ${process.parent_pid ?? "—"}`}</span>
                 </div>
               ))}
             </div>
@@ -250,83 +256,92 @@ export default function ProcessesPage() {
   }), [applicationsData, applicationFilter, applicationSearch, applicationSort]);
 
   return (
-    <div className="flex-1 flex flex-col min-w-0 bg-[#0d1117]">
-      <TopBar title="Processes and applications" subtitle="Running activity and resource use" />
+    <div className="flex-1 flex flex-col min-w-0 bg-[#FAFCFF]">
+      <TopBar title="Processes and applications" subtitle="Running Activity & Resource Attribution" />
 
-      <main className="flex-1 px-6 sm:px-8 lg:px-10 py-8 max-w-[1440px] w-full mx-auto space-y-8">
+      <main className="flex-1 px-6 sm:px-8 lg:px-10 py-8 max-w-[1440px] w-full mx-auto space-y-8 animate-fade-in-up">
         {/* Header & Subtitle */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-slate-500/10 text-slate-300 border border-slate-700">
-                Live process data
+              <span className="w-2 h-2 rounded-full bg-[#2563EB]" />
+              <span className="text-xs font-mono font-bold tracking-wider text-[#2563EB] uppercase">
+                Process Intelligence
               </span>
             </div>
-            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-100 font-sans">
-              Processes and recommendations
+            <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#172033] font-sans">
+              Process Analyzer & Recommendations
             </h2>
-            <p className="text-sm text-slate-400 font-sans mt-1 max-w-2xl">
-              See which applications are running, how much resource they use, and which items may be worth a closer look.
+            <p className="text-sm text-[#667085] font-sans mt-1 max-w-2xl leading-relaxed">
+              6-tier canonical process categorization, resource footprint analysis, and explainable human-in-the-loop recommendations.
             </p>
           </div>
 
           {/* Policy Guardrail Pill */}
-          <div className="bg-[#151b23] border border-[#29323d] px-3 py-2 rounded-lg text-xs text-slate-400 flex items-center gap-2 max-w-md">
-            <Shield className="w-4 h-4 text-slate-500 shrink-0" />
-            <span>No automatic actions. You stay in control.</span>
+          <div className="liquid-glass-badge px-3.5 py-2 text-xs text-[#667085] flex items-center gap-2 shadow-xs">
+            <Shield className="w-4 h-4 text-[#16A34A] shrink-0" />
+            <span className="font-medium">Zero automated termination. You stay in control.</span>
           </div>
         </div>
 
         {/* ── Summary Statistics Deck ─────────────────────────────────────────── */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-[#151b23] border border-[#29323d] rounded-xl p-5 shadow-sm">
-            <div className="flex items-center justify-between text-xs font-mono text-slate-400 mb-2">
-              <span>Processes in latest snapshot</span>
-              <Layers className="w-4 h-4 text-sky-400" />
+          <div className="liquid-glass-card-interactive p-5 shadow-xs">
+            <div className="flex items-center justify-between text-xs font-mono font-bold text-[#667085] mb-2">
+              <span>Processes In Snapshot</span>
+              <div className="p-1.5 rounded-lg bg-[#EFF6FF] text-[#2563EB]">
+                <Layers className="w-4 h-4" />
+              </div>
             </div>
-            <div className="text-2xl font-bold font-mono text-slate-100">
+            <div className="text-2xl sm:text-3xl font-extrabold font-mono text-[#172033]">
               {applicationsData?.total_processes_enumerated ?? summary?.total_analyzed ?? "—"}
             </div>
-            <div className="text-[11px] font-mono text-slate-500 mt-1">
-              {summary ? `${summary.total_system_processes} system processes detected` : "Counting accessible processes"}
+            <div className="text-[11px] font-mono text-[#98A2B3] mt-1">
+              {summary ? `${summary.total_system_processes} system processes enumerated` : "Enumerating accessible processes"}
             </div>
           </div>
 
-          <div className="bg-[#151b23] border border-[#29323d] rounded-xl p-5 shadow-sm">
-            <div className="flex items-center justify-between text-xs font-mono text-slate-400 mb-2">
-              <span>Resource-intensive processes</span>
-              <Zap className="w-4 h-4 text-sky-400" />
+          <div className="liquid-glass-card-interactive p-5 shadow-xs">
+            <div className="flex items-center justify-between text-xs font-mono font-bold text-[#667085] mb-2">
+              <span>High Resource Consumers</span>
+              <div className="p-1.5 rounded-lg bg-[#EFF6FF] text-[#2563EB]">
+                <Zap className="w-4 h-4" />
+              </div>
             </div>
-            <div className="text-2xl font-bold font-mono text-slate-100">
+            <div className="text-2xl sm:text-3xl font-extrabold font-mono text-[#172033]">
               {summary?.high_resource_consumer_count ?? "—"}
             </div>
-            <div className="text-[11px] font-mono text-slate-500 mt-1">
-              Currently classified by measured resource use
+            <div className="text-[11px] font-mono text-[#98A2B3] mt-1">
+              Classified by measured CPU / memory footprint
             </div>
           </div>
 
-          <div className={`bg-[#151b23] border rounded-xl p-5 shadow-sm ${summary?.review_candidate_count ? "border-amber-500/20" : "border-[#29323d]"}`}>
-            <div className={`flex items-center justify-between text-xs font-mono mb-2 ${summary?.review_candidate_count ? "text-amber-400" : "text-slate-400"}`}>
-              <span>Patterns to review</span>
-              <AlertTriangle className={`w-4 h-4 ${summary?.review_candidate_count ? "text-amber-400" : "text-slate-500"}`} />
+          <div className={`liquid-glass-card-interactive p-5 shadow-xs ${summary?.review_candidate_count ? "border-[#FDE68A] bg-[#FFFBEB]/50" : ""}`}>
+            <div className={`flex items-center justify-between text-xs font-mono font-bold mb-2 ${summary?.review_candidate_count ? "text-[#D97706]" : "text-[#667085]"}`}>
+              <span>Review Candidates</span>
+              <div className={`p-1.5 rounded-lg ${summary?.review_candidate_count ? "bg-[#FFFBEB] text-[#D97706]" : "bg-[#F1F4F8] text-[#98A2B3]"}`}>
+                <AlertTriangle className="w-4 h-4" />
+              </div>
             </div>
-            <div className="text-2xl font-bold font-mono text-slate-100">
+            <div className="text-2xl sm:text-3xl font-extrabold font-mono text-[#172033]">
               {summary?.review_candidate_count ?? "—"}
             </div>
-            <div className="text-[11px] font-mono text-slate-500 mt-1">
-              Based on measured process behavior
+            <div className="text-[11px] font-mono text-[#98A2B3] mt-1">
+              Evaluated across 4 deterministic sub-rules
             </div>
           </div>
 
-          <div className="bg-[#151b23] border border-[#29323d] rounded-xl p-5 shadow-sm">
-            <div className="flex items-center justify-between text-xs font-mono text-slate-400 mb-2">
-              <span>Estimated reclaimable memory</span>
-              <MemoryStick className="w-4 h-4 text-slate-500" />
+          <div className="liquid-glass-card-interactive p-5 shadow-xs">
+            <div className="flex items-center justify-between text-xs font-mono font-bold text-[#667085] mb-2">
+              <span>Estimated Reclaimable</span>
+              <div className="p-1.5 rounded-lg bg-[#F0FDF4] text-[#16A34A]">
+                <MemoryStick className="w-4 h-4" />
+              </div>
             </div>
-            <div className="text-2xl font-bold font-mono text-slate-100">
+            <div className="text-2xl sm:text-3xl font-extrabold font-mono text-[#16A34A]">
               {potentialReclaimableMb > 0 ? `${potentialReclaimableMb.toFixed(0)} MB` : "0 MB"}
             </div>
-            <div className="text-[11px] font-mono text-slate-500 mt-1">
+            <div className="text-[11px] font-mono text-[#98A2B3] mt-1">
               From {recommendations.length} actionable suggestions
             </div>
           </div>
@@ -334,25 +349,25 @@ export default function ProcessesPage() {
 
         {/* ── Explainable Recommendations Section ───────────────────────────── */}
         {recommendations.length > 0 && (
-          <div className="bg-[#151b23] border border-amber-500/30 rounded-xl p-6 sm:p-7 space-y-5 shadow-md">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#29323d] pb-4">
+          <div className="liquid-glass-card p-6 sm:p-7 space-y-5 shadow-xs border-[#FDE68A] bg-[#FFFBEB]/40">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#FDE68A]/70 pb-4">
               <div>
                 <div className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-amber-400" />
-                  <h3 className="text-lg font-bold font-mono text-slate-100">
+                  <Sparkles className="w-5 h-5 text-[#D97706]" />
+                  <h3 className="text-lg font-bold font-mono text-[#172033]">
                     EXPLAINABLE APPLICATION RECOMMENDATIONS
                   </h3>
-                  <span className="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                  <span className="px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold bg-[#FFFBEB] text-[#D97706] border border-[#FDE68A]">
                     {recommendations.length} Active
                   </span>
                 </div>
-                <p className="text-xs font-sans text-slate-400 mt-1">
-                  Evidence-based suggestions explaining process behavior, resource impact, unusual patterns, and safe manual actions.
+                <p className="text-xs font-sans text-[#667085] mt-1">
+                  Evidence-based suggestions detailing operational role, resource usage, classification logic, and safe manual remediation.
                 </p>
               </div>
 
-              <div className="text-right text-xs font-mono text-slate-400">
-                Potential memory savings: <span className="font-bold text-emerald-400">{potentialReclaimableMb.toFixed(1)} MB</span>
+              <div className="text-right text-xs font-mono text-[#667085]">
+                Potential memory savings: <span className="font-bold text-[#16A34A]">{potentialReclaimableMb.toFixed(1)} MB</span>
               </div>
             </div>
 
@@ -366,16 +381,16 @@ export default function ProcessesPage() {
                 return (
                   <div
                     key={rec.id}
-                    className="bg-[#11171f] border border-[#29323d] hover:border-slate-700/80 rounded-lg p-5 transition-all space-y-4"
+                    className="bg-white border border-[#E5EAF1] hover:border-[#BFDBFE] rounded-2xl p-5 transition-all shadow-xs space-y-4"
                   >
                     {/* Top Row: Process Name, Category, Badges, Toggle */}
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                      <div className="flex items-center gap-3">
+                      <div className="flex flex-wrap items-center gap-2.5">
                         <span
-                          className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase border ${
+                          className={`px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase border ${
                             rec.severity === "HIGH"
-                              ? "bg-rose-500/20 text-rose-300 border-rose-500/40"
-                              : "bg-amber-500/20 text-amber-300 border-amber-500/40"
+                              ? "bg-[#FEF2F2] text-[#DC2626] border-[#FECACA]"
+                              : "bg-[#FFFBEB] text-[#D97706] border-[#FDE68A]"
                           }`}
                         >
                           {rec.severity} Priority
@@ -383,30 +398,30 @@ export default function ProcessesPage() {
 
                         <Link
                           href={`/processes/${rec.pid}`}
-                          className="font-mono font-bold text-slate-100 hover:text-sky-400 flex items-center gap-1.5 text-sm"
+                          className="font-mono font-bold text-[#172033] hover:text-[#2563EB] flex items-center gap-1.5 text-sm transition-colors"
                         >
                           <span>{rec.display_name || rec.name}</span>
                           {rec.display_name && rec.display_name !== rec.name && (
-                            <span className="ml-2 text-xs font-normal text-slate-500">{rec.name}</span>
+                            <span className="ml-1 text-xs font-normal text-[#98A2B3]">{rec.name}</span>
                           )}
-                          <span className="text-xs text-slate-500">(PID {rec.pid})</span>
+                          <span className="text-xs text-[#98A2B3]">(PID {rec.pid})</span>
                         </Link>
 
-                        <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-mono border ${safety.className}`}>
+                        <div className={`flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-semibold border ${safety.className}`}>
                           <SafetyIcon className="w-3 h-3" />
                           <span>{safety.text}</span>
                         </div>
                       </div>
 
                       <div className="flex items-center gap-4">
-                        <div className="text-xs font-mono text-emerald-400 font-semibold">
+                        <div className="text-xs font-mono text-[#16A34A] font-bold">
                           Reclaimable: ~{rec.reclaimable_memory_mb} MB
                           {rec.reclaimable_cpu_percent > 0 && ` | ${rec.reclaimable_cpu_percent}% CPU`}
                         </div>
 
                         <button
                           onClick={() => setExpandedRecId(isExpanded ? null : rec.id)}
-                          className="text-xs font-mono text-slate-400 hover:text-slate-200 flex items-center gap-1 px-2 py-1 rounded bg-slate-800/60 hover:bg-slate-800 transition-colors"
+                          className="text-xs font-mono text-[#2563EB] hover:text-[#1D4ED8] flex items-center gap-1 px-3 py-1.5 rounded-xl bg-[#EFF6FF] hover:bg-[#DBEAFE] font-semibold transition-colors"
                         >
                           <span>{isExpanded ? "Collapse" : "Explain"}</span>
                           {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
@@ -415,64 +430,64 @@ export default function ProcessesPage() {
                     </div>
 
                     {/* Concise Summary Sentence */}
-                    <p className="text-xs font-mono text-slate-300">
+                    <p className="text-xs font-sans text-[#475569] leading-relaxed">
                       {rec.what_process_is_doing || rec.activity_description}
                     </p>
 
                     {/* Expanded 7-Dimensional Explainable Evidence Panel */}
                     {isExpanded && (
-                      <div className="mt-4 pt-4 border-t border-[#29323d] space-y-4 text-xs font-mono">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="mt-4 pt-4 border-t border-[#EDF0F5] space-y-4 text-xs font-mono">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
                           <div className="space-y-1">
-                            <span className="text-[11px] uppercase tracking-wider text-slate-500 font-semibold">
+                            <span className="text-[11px] uppercase tracking-wider text-[#98A2B3] font-bold">
                               1. Resources Consumed
                             </span>
-                            <div className="text-slate-200 bg-[#151b23] p-2.5 rounded border border-[#29323d]">
+                            <div className="text-[#172033] glass-well p-3 rounded-xl border border-[#E5EAF1] font-sans">
                               {rec.resources_consumed}
                             </div>
                           </div>
 
                           <div className="space-y-1">
-                            <span className="text-[11px] uppercase tracking-wider text-slate-500 font-semibold">
+                            <span className="text-[11px] uppercase tracking-wider text-[#98A2B3] font-bold">
                               2. Unusual Usage Assessment
                             </span>
-                            <div className="text-slate-200 bg-[#151b23] p-2.5 rounded border border-[#29323d]">
+                            <div className="text-[#172033] glass-well p-3 rounded-xl border border-[#E5EAF1] font-sans">
                               {rec.is_usage_unusual}
                             </div>
                           </div>
 
                           <div className="space-y-1">
-                            <span className="text-[11px] uppercase tracking-wider text-slate-500 font-semibold">
+                            <span className="text-[11px] uppercase tracking-wider text-[#98A2B3] font-bold">
                               3. Classification Reason
                             </span>
-                            <div className="text-slate-200 bg-[#151b23] p-2.5 rounded border border-[#29323d]">
+                            <div className="text-[#172033] glass-well p-3 rounded-xl border border-[#E5EAF1] font-sans">
                               {rec.classification_reason}
                             </div>
                           </div>
 
                           <div className="space-y-1">
-                            <span className="text-[11px] uppercase tracking-wider text-slate-500 font-semibold">
+                            <span className="text-[11px] uppercase tracking-wider text-[#98A2B3] font-bold">
                               4. Investigation Guidance
                             </span>
-                            <div className="text-slate-200 bg-[#151b23] p-2.5 rounded border border-[#29323d]">
+                            <div className="text-[#172033] glass-well p-3 rounded-xl border border-[#E5EAF1] font-sans">
                               {rec.should_investigate || rec.investigation_advice}
                             </div>
                           </div>
 
                           <div className="space-y-1">
-                            <span className="text-[11px] uppercase tracking-wider text-slate-500 font-semibold">
+                            <span className="text-[11px] uppercase tracking-wider text-[#98A2B3] font-bold">
                               5. Manual Closure Consideration
                             </span>
-                            <div className="text-slate-200 bg-[#151b23] p-2.5 rounded border border-[#29323d]">
+                            <div className="text-[#172033] glass-well p-3 rounded-xl border border-[#E5EAF1] font-sans">
                               {rec.manual_closure_considered || rec.manual_closure_guidance}
                             </div>
                           </div>
 
                           <div className="space-y-1">
-                            <span className="text-[11px] uppercase tracking-wider text-slate-500 font-semibold">
+                            <span className="text-[11px] uppercase tracking-wider text-[#98A2B3] font-bold">
                               6. Safety & Uncertainty Considerations
                             </span>
-                            <div className="text-slate-200 bg-[#151b23] p-2.5 rounded border border-[#29323d]">
+                            <div className="text-[#172033] glass-well p-3 rounded-xl border border-[#E5EAF1] font-sans">
                               {rec.safety_and_uncertainty}
                             </div>
                           </div>
@@ -481,13 +496,13 @@ export default function ProcessesPage() {
                         {/* Evidence Bullets */}
                         {rec.evidence && rec.evidence.length > 0 && (
                           <div className="space-y-1.5 pt-2">
-                            <span className="text-[11px] uppercase tracking-wider text-slate-500 font-semibold">
+                            <span className="text-[11px] uppercase tracking-wider text-[#98A2B3] font-bold">
                               Supporting Telemetry Evidence
                             </span>
-                            <ul className="space-y-1 text-slate-400">
+                            <ul className="space-y-1 text-[#667085]">
                               {rec.evidence.map((item: string, idx: number) => (
                                 <li key={idx} className="flex items-center gap-2">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-sky-400/70 shrink-0" />
+                                  <span className="w-1.5 h-1.5 rounded-full bg-[#2563EB] shrink-0" />
                                   <span>{item}</span>
                                 </li>
                               ))}
@@ -506,54 +521,54 @@ export default function ProcessesPage() {
         <section className="space-y-4">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div>
-              <h3 className="text-lg font-bold text-slate-100">Running Applications & Processes</h3>
-              <p className="text-xs text-slate-400 mt-1">
-                Grouped from the latest collector snapshot. CPU is normalized across {applicationsData?.cpu_core_count ?? "—"} logical cores; memory is resident set size.
+              <h3 className="text-lg font-bold text-[#172033]">Running Applications & Grouped Processes</h3>
+              <p className="text-xs text-[#667085] mt-1">
+                Grouped from the latest collector snapshot. CPU is normalized across {applicationsData?.cpu_core_count ?? "—"} logical cores; memory is resident set size (RSS).
               </p>
             </div>
             <div className="relative w-full md:max-w-xs">
-              <Search className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+              <Search className="w-4 h-4 text-[#98A2B3] absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
                 value={applicationSearch}
                 onChange={event => setApplicationSearch(event.target.value)}
                 placeholder="Search app, executable, or PID"
-                className="w-full bg-[#151b23] border border-[#29323d] rounded-lg pl-9 pr-3 py-2 text-xs font-mono text-slate-200 outline-none focus:border-sky-500/50"
+                className="w-full bg-white border border-[#E5EAF1] rounded-xl pl-9 pr-3.5 py-2 text-xs font-mono text-[#172033] placeholder-[#98A2B3] outline-none focus:border-[#2563EB] focus:ring-2 focus:ring-[#EFF6FF] shadow-2xs transition-all"
               />
             </div>
           </div>
 
-          <div className="rounded-xl border border-amber-500/25 bg-amber-500/[0.04] p-4 sm:p-5">
-            <div className="flex items-start gap-3">
-              <Clock className="mt-0.5 h-4 w-4 shrink-0 text-amber-300" />
+          <div className="rounded-2xl border border-[#FDE68A] bg-[#FFFBEB]/50 p-5 shadow-xs">
+            <div className="flex items-start gap-3.5">
+              <Clock className="mt-0.5 h-5 w-5 shrink-0 text-[#D97706]" />
               <div className="min-w-0 flex-1">
-                <h4 className="text-sm font-semibold text-slate-100">
-                  Idle-use review suggestions (1 hour)
+                <h4 className="text-sm font-bold text-[#172033]">
+                  Idle-Use Review Suggestions (1 Hour Threshold)
                 </h4>
-                <p className="mt-1 text-xs text-slate-400">
-                  User apps not observed in the foreground for at least an hour. Consider closing one only if you no longer need it; SYSTEMOS will never close it for you.
+                <p className="mt-1 text-xs text-[#667085] leading-relaxed">
+                  User applications not observed in the foreground for at least 60 minutes. Prompt for operator manual review; SYSTEMOS will never terminate an application automatically.
                 </p>
                 {applicationsLoading && !applicationsData ? (
-                  <p className="mt-3 text-xs text-slate-500">Waiting for foreground activity data…</p>
+                  <p className="mt-3 text-xs text-[#98A2B3] font-mono">Waiting for foreground activity telemetry…</p>
                 ) : applicationsError ? (
-                  <p className="mt-3 text-xs text-amber-300" role="alert">
+                  <p className="mt-3 text-xs text-[#DC2626] font-mono" role="alert">
                     Suggestions unavailable: {applicationsError}
                   </p>
                 ) : applicationsData?.collector_age_seconds != null && applicationsData.collector_age_seconds > 60 ? (
-                  <p className="mt-3 text-xs text-amber-300" role="alert">
-                    Suggestions paused because the latest process snapshot is stale. Check that the collector is running.
+                  <p className="mt-3 text-xs text-[#D97706] font-mono" role="alert">
+                    Suggestions paused because latest process snapshot is stale. Check that collector is active.
                   </p>
                 ) : applicationsData?.idle_suggestions.length ? (
-                  <ul className="mt-3 divide-y divide-[#29323d]">
+                  <ul className="mt-3 divide-y divide-[#FDE68A]/60">
                     {applicationsData.idle_suggestions.map(suggestion => (
                       <li
                         key={suggestion.application_id}
                         className="flex flex-col gap-2 py-3 first:pt-0 last:pb-0 sm:flex-row sm:items-center sm:justify-between"
                       >
                         <div className="min-w-0">
-                          <div className="truncate text-sm font-medium text-amber-100">
+                          <div className="truncate text-sm font-bold text-[#172033]">
                             {suggestion.display_name}
                           </div>
-                          <div className="mt-1 text-[11px] text-slate-400">
+                          <div className="mt-1 text-[11px] text-[#667085] font-mono">
                             Last observed in foreground {formatDuration(suggestion.idle_seconds)} ago
                             {" · "}{suggestion.process_count} process{suggestion.process_count === 1 ? "" : "es"}
                             {" · "}{(suggestion.memory_bytes / (1024 * 1024)).toFixed(0)} MB resident memory
@@ -565,7 +580,7 @@ export default function ProcessesPage() {
                             setApplicationFilter("all");
                             setApplicationSearch(suggestion.display_name);
                           }}
-                          className="self-start rounded border border-amber-500/25 px-2.5 py-1 text-xs text-amber-200 hover:bg-amber-500/10 sm:self-auto"
+                          className="self-start rounded-xl border border-[#FDE68A] bg-white px-3 py-1.5 text-xs font-semibold text-[#D97706] hover:bg-[#FFFBEB] sm:self-auto shadow-2xs transition-colors"
                         >
                           Find in running apps
                         </button>
@@ -573,8 +588,8 @@ export default function ProcessesPage() {
                     ))}
                   </ul>
                 ) : (
-                  <p className="mt-3 text-xs text-slate-500">
-                    No eligible running apps have been observed outside the foreground for an hour. Activity tracking begins when the collector observes an app in the foreground.
+                  <p className="mt-3 text-xs text-[#667085]">
+                    No eligible running apps have been observed outside the foreground for over an hour. Activity tracking begins when an application is observed in the foreground.
                   </p>
                 )}
               </div>
@@ -591,58 +606,58 @@ export default function ProcessesPage() {
               <button
                 key={id}
                 onClick={() => setApplicationFilter(id)}
-                className={`px-3 py-1.5 rounded-md border text-xs font-mono ${
+                className={`px-3.5 py-1.5 rounded-xl border text-xs font-mono font-medium transition-all duration-200 ${
                   applicationFilter === id
-                    ? "border-sky-500/40 bg-sky-500/10 text-sky-300"
-                    : "border-[#29323d] text-slate-400 hover:text-slate-200"
+                    ? "border-[#BFDBFE] bg-[#EFF6FF] text-[#2563EB] font-bold shadow-xs"
+                    : "border-[#E5EAF1] bg-white text-[#667085] hover:text-[#172033] hover:bg-[#F8FAFC]"
                 }`}
               >
                 {label}
               </button>
             ))}
-            <label className="ml-auto flex items-center gap-2 text-xs text-slate-400">
+            <label className="ml-auto flex items-center gap-2 text-xs font-mono text-[#667085]">
               Sort
               <select
                 value={applicationSort}
                 onChange={event => setApplicationSort(event.target.value)}
-                className="bg-[#151b23] border border-[#29323d] rounded-md px-2 py-1.5 text-slate-200"
+                className="bg-white border border-[#E5EAF1] rounded-xl px-2.5 py-1.5 text-[#172033] outline-none cursor-pointer hover:border-[#BFDBFE] shadow-2xs"
               >
-                <option value="cpu_percent">CPU</option>
-                <option value="memory_bytes">Memory</option>
+                <option value="cpu_percent">CPU Allocation</option>
+                <option value="memory_bytes">Memory Footprint</option>
               </select>
             </label>
           </div>
 
-          <div className="bg-[#151b23] border border-[#29323d] rounded-xl overflow-hidden">
+          <div className="liquid-glass-card rounded-2xl overflow-hidden shadow-xs border border-[#E5EAF1]">
             {applicationsError ? (
-              <div className="p-6 text-sm text-amber-300" role="alert">
+              <div className="p-6 text-sm text-[#DC2626] font-mono" role="alert">
                 Could not load the latest process snapshot: {applicationsError}
               </div>
             ) : applicationsLoading && !applicationsData ? (
-              <div className="p-8 text-center text-sm text-slate-400">Waiting for process snapshot…</div>
+              <div className="p-8 text-center text-sm text-[#98A2B3] font-mono">Waiting for process snapshot…</div>
             ) : applicationsData?.collector_age_seconds != null && applicationsData.collector_age_seconds > 60 ? (
-              <div className="p-6 text-sm text-amber-300" role="alert">
-                Process data is stale ({Math.round(applicationsData.collector_age_seconds)}s old). Check that the backend collector is running.
+              <div className="p-6 text-sm text-[#D97706] font-mono" role="alert">
+                Process data is stale ({Math.round(applicationsData.collector_age_seconds)}s old). Check that backend collector is running.
               </div>
             ) : visibleApplications.length === 0 ? (
-              <div className="p-8 text-center text-sm text-slate-400">
+              <div className="p-8 text-center text-sm text-[#667085] font-mono">
                 {applicationsData?.timestamp == null ? "No process snapshot has been collected yet." : "No applications match these filters."}
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[760px] text-xs font-mono">
-                  <thead className="bg-[#11171f] text-slate-400">
-                    <tr className="border-b border-[#29323d]">
-                      <th className="text-left p-3">Application</th>
-                      <th className="text-right p-3">CPU</th>
-                      <th className="text-right p-3">Memory</th>
-                      <th className="text-right p-3">Memory %</th>
-                      <th className="text-right p-3">Processes</th>
-                      <th className="text-left p-3">Status</th>
-                      <th className="p-3">Inspect</th>
+                  <thead className="bg-[#F8FAFC] text-[#667085] border-b border-[#E5EAF1]">
+                    <tr>
+                      <th className="text-left p-3.5 font-bold">Application</th>
+                      <th className="text-right p-3.5 font-bold">CPU</th>
+                      <th className="text-right p-3.5 font-bold">Memory</th>
+                      <th className="text-right p-3.5 font-bold">Memory %</th>
+                      <th className="text-right p-3.5 font-bold">Processes</th>
+                      <th className="text-left p-3.5 font-bold">Status</th>
+                      <th className="p-3.5 text-center font-bold">Inspect</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[#29323d]/60">
+                  <tbody className="divide-y divide-[#EDF0F5]">
                     {visibleApplications.map(application => {
                       const expanded = expandedApplicationId === application.application_id;
                       const memoryMb = application.memory_bytes / (1024 * 1024);
@@ -661,14 +676,14 @@ export default function ProcessesPage() {
               </div>
             )}
           </div>
-          <p className="text-[11px] text-slate-500 font-mono">
+          <p className="text-[11px] text-[#98A2B3] font-mono">
             Snapshot: {applicationsData?.timestamp ? new Date(applicationsData.timestamp * 1000).toLocaleTimeString() : "not available"} · {applicationsData?.total_processes_enumerated ?? 0} accessible processes enumerated
           </p>
         </section>
 
         {/* ── Category Filter Tabs + Search Controls ──────────────────────────── */}
         <div className="space-y-4">
-          <div className="flex flex-wrap items-center gap-1.5 bg-[#151b23] border border-[#29323d] p-1.5 rounded-xl">
+          <div className="flex flex-wrap items-center gap-1.5 bg-[#F1F4F8] border border-[#E5EAF1] p-1.5 rounded-2xl shadow-2xs">
             {CATEGORY_TABS.map(tab => {
               const Icon = tab.icon;
               const active = activeCategory === tab.id;
@@ -681,18 +696,18 @@ export default function ProcessesPage() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveCategory(tab.id)}
-                  className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-mono font-medium transition-all ${
+                  className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-mono font-medium transition-all duration-200 ${
                     active
-                      ? "bg-sky-500/20 text-sky-400 font-bold border border-sky-500/30 shadow-sm"
-                      : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/40"
+                      ? "bg-white text-[#2563EB] font-bold border border-[#BFDBFE] shadow-xs"
+                      : "text-[#667085] hover:text-[#172033] hover:bg-white/50"
                   }`}
                 >
                   <Icon className="w-3.5 h-3.5" />
                   <span>{tab.label}</span>
                   {count != null && (
                     <span
-                      className={`px-1.5 py-0.2 rounded text-[10px] ${
-                        active ? "bg-sky-500/30 text-sky-300" : "bg-slate-800 text-slate-500"
+                      className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                        active ? "bg-[#EFF6FF] text-[#2563EB]" : "bg-white/80 text-[#98A2B3]"
                       }`}
                     >
                       {count}
@@ -706,22 +721,22 @@ export default function ProcessesPage() {
           {/* Search Bar + Sort Switcher */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="relative flex-1 max-w-md">
-              <Search className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <Search className="w-4 h-4 text-[#98A2B3] absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 placeholder="Search processes by name, PID, or parent..."
-                className="bg-[#151b23] border border-[#29323d] focus:border-sky-500/50 rounded-lg pl-9 pr-4 py-2 text-xs font-mono text-slate-200 placeholder-slate-500 outline-none w-full transition-colors"
+                className="bg-white border border-[#E5EAF1] focus:border-[#2563EB] focus:ring-2 focus:ring-[#EFF6FF] rounded-xl pl-9 pr-4 py-2 text-xs font-mono text-[#172033] placeholder-[#98A2B3] outline-none w-full shadow-2xs transition-all"
               />
             </div>
 
-            <div className="flex items-center gap-2 text-xs font-mono text-slate-400">
+            <div className="flex items-center gap-2 text-xs font-mono text-[#667085]">
               <span>Sort by:</span>
               <select
                 value={sortBy}
                 onChange={e => setSortBy(e.target.value)}
-                className="bg-[#151b23] border border-[#29323d] text-slate-200 text-xs font-mono rounded-lg px-3 py-1.5 outline-none cursor-pointer hover:border-slate-700"
+                className="bg-white border border-[#E5EAF1] text-[#172033] text-xs font-mono rounded-xl px-3 py-1.5 outline-none cursor-pointer hover:border-[#BFDBFE] shadow-2xs"
               >
                 <option value="cpu_percent">CPU Allocation</option>
                 <option value="memory_mb">Physical Memory (MB)</option>
@@ -733,41 +748,41 @@ export default function ProcessesPage() {
         </div>
 
         {/* ── Process Matrix Table ────────────────────────────────────────────── */}
-        <div className="bg-[#151b23] border border-[#29323d] rounded-xl overflow-hidden shadow-sm">
+        <div className="liquid-glass-card rounded-2xl overflow-hidden shadow-xs border border-[#E5EAF1]">
           <div className="overflow-x-auto">
             <table className="w-full text-xs font-mono">
               <thead>
-                <tr className="border-b border-[#29323d] bg-[#11171f] text-slate-400">
-                  <th className="text-left py-3.5 px-5 font-semibold">Process & Lineage</th>
-                  <th className="text-left py-3.5 px-4 font-semibold">Classification</th>
-                  <th className="text-left py-3.5 px-4 font-semibold">Safety Level</th>
-                  <th className="text-left py-3.5 px-5 font-semibold w-48">CPU Allocation</th>
-                  <th className="text-right py-3.5 px-4 font-semibold">Resident RAM</th>
-                  <th className="text-center py-3.5 px-3 font-semibold">Sockets</th>
-                  <th className="text-right py-3.5 px-4 font-semibold">Duration</th>
+                <tr className="border-b border-[#E5EAF1] bg-[#F8FAFC] text-[#667085]">
+                  <th className="text-left py-3.5 px-5 font-bold">Process & Lineage</th>
+                  <th className="text-left py-3.5 px-4 font-bold">Classification</th>
+                  <th className="text-left py-3.5 px-4 font-bold">Safety Level</th>
+                  <th className="text-left py-3.5 px-5 font-bold w-48">CPU Allocation</th>
+                  <th className="text-right py-3.5 px-4 font-bold">Resident RAM</th>
+                  <th className="text-center py-3.5 px-3 font-bold">Sockets</th>
+                  <th className="text-right py-3.5 px-4 font-bold">Duration</th>
                   <th className="py-3.5 px-4"></th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#29323d]/60">
+              <tbody className="divide-y divide-[#EDF0F5]">
                 {analyzerLoading && rawProcesses.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="py-16 text-center text-slate-500 font-mono">
+                    <td colSpan={8} className="py-16 text-center text-[#98A2B3] font-mono">
                       Polling operating system process snapshots and telemetry...
                     </td>
                   </tr>
                 ) : analyzerError && rawProcesses.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="py-16 text-center text-amber-400 font-mono">
+                    <td colSpan={8} className="py-16 text-center text-[#D97706] font-mono">
                       <div className="flex flex-col items-center justify-center gap-2">
-                        <AlertTriangle className="w-5 h-5 text-amber-400" />
-                        <span>Telemetry temporarily unavailable: {analyzerError}</span>
-                        <span className="text-xs text-slate-500">Retrying live process telemetry in 3.5s...</span>
+                        <AlertTriangle className="w-5 h-5 text-[#D97706]" />
+                        <span className="font-semibold">Telemetry temporarily unavailable: {analyzerError}</span>
+                        <span className="text-xs text-[#98A2B3]">Retrying live process telemetry in 3.5s...</span>
                       </div>
                     </td>
                   </tr>
                 ) : filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="py-16 text-center text-slate-500 font-mono">
+                    <td colSpan={8} className="py-16 text-center text-[#667085] font-mono">
                       No matching processes discovered in category &apos;{activeCategory}&apos;.
                     </td>
                   </tr>
@@ -784,28 +799,28 @@ export default function ProcessesPage() {
                     return (
                       <tr
                         key={`${p.pid}-${i}`}
-                        className="h-14 hover:bg-slate-800/40 transition-colors group cursor-pointer"
+                        className="h-14 hover:bg-[#F8FAFC] transition-colors group cursor-pointer"
                       >
                         {/* Process Name + Parent */}
                         <td className="py-3.5 px-5 max-w-xs truncate">
                           <Link
                             href={`/processes/${p.pid}`}
-                            className="hover:text-sky-400 flex flex-col group-hover:underline"
+                            className="hover:text-[#2563EB] flex flex-col group-hover:underline transition-colors"
                           >
                             <div className="flex items-center gap-2">
-                              <span className="font-semibold text-slate-200 truncate">{p.display_name || p.name}</span>
-                              <span className="text-[11px] text-slate-500">#{p.pid}</span>
+                              <span className="font-bold text-[#172033] truncate">{p.display_name || p.name}</span>
+                              <span className="text-[11px] text-[#98A2B3] font-medium">#{p.pid}</span>
                               {p.is_foreground && (
-                                <span className="px-1.5 py-0.2 rounded text-[9px] bg-sky-500/20 text-sky-300 border border-sky-500/30 uppercase font-bold">
+                                <span className="px-2 py-0.5 rounded-full text-[9px] bg-[#EFF6FF] text-[#2563EB] border border-[#BFDBFE] uppercase font-bold">
                                   Focus
                                 </span>
                               )}
                             </div>
                             {p.display_name && p.display_name !== p.name && (
-                              <span className="text-[10px] text-slate-500 truncate">{p.name}</span>
+                              <span className="text-[10px] text-[#98A2B3] truncate">{p.name}</span>
                             )}
                             {p.parent_name && (
-                              <span className="text-[10px] text-slate-500 truncate">
+                              <span className="text-[10px] text-[#98A2B3] truncate">
                                 Parent: {p.parent_name}
                               </span>
                             )}
@@ -815,7 +830,7 @@ export default function ProcessesPage() {
                         {/* Classification Badge */}
                         <td className="py-3.5 px-4">
                           <span
-                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold border ${classBadge.bg}`}
+                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border shadow-2xs ${classBadge.bg}`}
                           >
                             <span className={`w-1.5 h-1.5 rounded-full ${classBadge.dot}`} />
                             <span className="truncate">{classBadge.label}</span>
@@ -825,7 +840,7 @@ export default function ProcessesPage() {
                         {/* Safety Tier Badge */}
                         <td className="py-3.5 px-4">
                           <span
-                            className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] border ${safety.className}`}
+                            className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold border ${safety.className}`}
                           >
                             <SafetyIcon className="w-3 h-3" />
                             <span>{safety.text}</span>
@@ -835,10 +850,10 @@ export default function ProcessesPage() {
                         {/* CPU Bar + Value */}
                         <td className="py-3.5 px-5">
                           <div className="flex items-center gap-3">
-                            <div className="flex-1 h-2 rounded-full bg-slate-800 overflow-hidden">
+                            <div className="flex-1 h-2 rounded-full bg-[#E5EAF1] overflow-hidden">
                               <div
-                                className={`h-full rounded-full ${
-                                  isHighCpu ? "bg-rose-500" : isElevatedCpu ? "bg-amber-400" : "bg-sky-400"
+                                className={`h-full rounded-full transition-all duration-300 ${
+                                  isHighCpu ? "bg-[#DC2626]" : isElevatedCpu ? "bg-[#D97706]" : "bg-[#2563EB]"
                                 }`}
                                 style={{ width: `${Math.min(cpu, 100)}%` }}
                               />
@@ -846,10 +861,10 @@ export default function ProcessesPage() {
                             <span
                               className={`w-12 text-right font-bold ${
                                 isHighCpu
-                                  ? "text-rose-400"
+                                  ? "text-[#DC2626]"
                                   : isElevatedCpu
-                                  ? "text-amber-400"
-                                  : "text-slate-300"
+                                  ? "text-[#D97706]"
+                                  : "text-[#172033]"
                               }`}
                             >
                               {formatPct(p.cpu_percent)}
@@ -858,26 +873,26 @@ export default function ProcessesPage() {
                         </td>
 
                         {/* Memory RSS */}
-                        <td className="py-3.5 px-4 text-slate-300 text-right font-semibold">
+                        <td className="py-3.5 px-4 text-[#172033] text-right font-bold">
                           {memMb >= 1000 ? `${(memMb / 1024).toFixed(2)} GB` : `${memMb.toFixed(1)} MB`}
                         </td>
 
                         {/* Sockets */}
-                        <td className="py-3.5 px-3 text-center text-slate-400">
+                        <td className="py-3.5 px-3 text-center text-[#667085]">
                           {p.open_connections > 0 ? (
-                            <span className="inline-flex items-center gap-1 text-sky-400">
+                            <span className="inline-flex items-center gap-1 text-[#2563EB] font-bold">
                               <Network className="w-3 h-3" />
                               <span>{p.open_connections}</span>
                             </span>
                           ) : (
-                            <span className="text-slate-600">—</span>
+                            <span className="text-[#CBD5E1]">—</span>
                           )}
                         </td>
 
                         {/* Duration */}
-                        <td className="py-3.5 px-4 text-slate-400 text-right">
+                        <td className="py-3.5 px-4 text-[#667085] text-right">
                           <span className="flex items-center justify-end gap-1 text-[11px]">
-                            <Clock className="w-3 h-3 text-slate-500" />
+                            <Clock className="w-3 h-3 text-[#98A2B3]" />
                             <span>{formatDuration(p.runtime_seconds)}</span>
                           </span>
                         </td>
@@ -886,7 +901,7 @@ export default function ProcessesPage() {
                         <td className="py-3.5 px-4 text-right">
                           <Link
                             href={`/processes/${p.pid}`}
-                            className="p-1 rounded text-slate-500 hover:text-sky-400 inline-flex transition-colors"
+                            className="p-1.5 rounded-lg text-[#98A2B3] hover:text-[#2563EB] hover:bg-[#EFF6FF] inline-flex transition-colors"
                           >
                             <ChevronRight className="w-4 h-4" />
                           </Link>
@@ -904,8 +919,8 @@ export default function ProcessesPage() {
         <PipelineHealthSection />
 
         {/* Footer Status */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between text-xs font-mono text-slate-500 px-1 gap-2">
-          <span>Active telemetry refreshed every 3.5s via SQLite snapshots & Win32 RPCs</span>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between text-xs font-mono text-[#98A2B3] px-1 gap-2">
+          <span>Active telemetry refreshed via SQLite snapshots & Win32 RPCs</span>
           <span>
             Showing {filtered.length} of {rawProcesses.length} monitored entities
           </span>

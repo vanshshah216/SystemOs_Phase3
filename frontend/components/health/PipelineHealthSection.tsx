@@ -80,30 +80,30 @@ export default function PipelineHealthSection() {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "operational":
-        return <CheckCircle2 className="w-4 h-4 text-slate-400 shrink-0" />;
+        return <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />;
       case "degraded":
       case "initializing":
-        return <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />;
+        return <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />;
       case "down":
       case "stopped":
-        return <XCircle className="w-4 h-4 text-rose-400 shrink-0" />;
+        return <XCircle className="w-4 h-4 text-rose-600 shrink-0" />;
       default:
-        return <Activity className="w-4 h-4 text-slate-500 shrink-0" />;
+        return <Activity className="w-4 h-4 text-slate-400 shrink-0" />;
     }
   };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "operational":
-        return "bg-slate-500/10 text-slate-300 border-slate-700";
+        return "bg-emerald-50 text-emerald-700 border-emerald-200";
       case "degraded":
       case "initializing":
-        return "bg-amber-500/15 text-amber-400 border-amber-500/30";
+        return "bg-amber-50 text-amber-700 border-amber-200";
       case "down":
       case "stopped":
-        return "bg-rose-500/15 text-rose-400 border-rose-500/30";
+        return "bg-rose-50 text-rose-700 border-rose-200";
       default:
-        return "bg-slate-800 text-slate-400 border-slate-700";
+        return "bg-slate-100 text-slate-600 border-slate-200";
     }
   };
 
@@ -112,48 +112,52 @@ export default function PipelineHealthSection() {
     healthData?.pipeline_health?.overall_status === "operational";
 
   return (
-    <div className="bg-[#151b23] border border-[#29323d] rounded-xl p-6 sm:p-7 space-y-5 shadow-sm">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#29323d] pb-4">
+    <div className="bg-white/90 border border-slate-200/80 rounded-2xl p-6 sm:p-7 space-y-5 shadow-sm shadow-slate-200/50 backdrop-blur-xl">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
         <div>
           <div className="flex items-center gap-2">
-            <ShieldCheck className="w-5 h-5 text-sky-400" />
-            <h3 className="text-base font-bold font-sans text-slate-100">
+            <div className="w-7 h-7 rounded-lg bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600">
+              <ShieldCheck className="w-4 h-4" />
+            </div>
+            <h3 className="text-base font-bold font-sans text-[#172033]">
               Monitoring health
             </h3>
-            {healthData && <span
-              className={`px-2 py-0.5 rounded text-[11px] font-mono font-bold uppercase border ${
-                overallHealthy
-                  ? "bg-slate-500/10 text-slate-300 border-slate-700"
-                  : "bg-amber-500/15 text-amber-400 border-amber-500/30"
-              }`}
-            >
-              {overallHealthy ? "Operational" : "Degraded"}
-            </span>}
+            {healthData && (
+              <span
+                className={`px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold uppercase border ${
+                  overallHealthy
+                    ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                    : "bg-amber-50 text-amber-700 border-amber-200"
+                }`}
+              >
+                {overallHealthy ? "Operational" : "Degraded"}
+              </span>
+            )}
           </div>
-          <p className="text-xs font-sans text-slate-400 mt-1">
+          <p className="text-xs font-sans text-slate-500 mt-1">
             Current status reported by the monitoring backend.
           </p>
         </div>
 
         <div className="flex items-center gap-3 self-start sm:self-auto">
           {healthData && (
-            <span className="text-xs text-slate-500">
+            <span className="text-xs text-slate-500 font-mono">
               Updated {lastRefreshed.toLocaleTimeString()}
             </span>
           )}
           <button
             onClick={fetchHealth}
             disabled={loading}
-            className="text-xs text-slate-400 hover:text-slate-200 disabled:opacity-60 flex items-center gap-1.5 px-3 py-1.5 rounded bg-slate-800/60 hover:bg-slate-800 transition-colors"
+            className="text-xs text-slate-700 hover:text-slate-900 disabled:opacity-60 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 font-mono font-medium transition-colors shadow-xs"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin text-blue-600" : ""}`} />
             <span>Refresh status</span>
           </button>
         </div>
       </div>
 
       {healthError && (
-        <p role="alert" className="rounded-lg border border-amber-500/30 bg-amber-500/5 px-4 py-3 text-xs text-amber-300">
+        <p role="alert" className="rounded-xl border border-amber-200 bg-amber-50/80 px-4 py-3 text-xs text-amber-800 shadow-xs">
           Backend health is unavailable: {healthError}
         </p>
       )}
@@ -162,22 +166,22 @@ export default function PipelineHealthSection() {
         {Object.entries(components).map(([key, comp]) => (
           <div
             key={key}
-            className="bg-[#11171f] border border-[#232d38] rounded-lg p-4 space-y-2 hover:border-slate-700 transition-colors"
+            className="bg-slate-50/80 border border-slate-200/70 rounded-xl p-4 space-y-2 hover:border-blue-300 hover:bg-blue-50/30 transition-all duration-200 shadow-xs"
           >
             <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 min-w-0">
                 {getStatusIcon(comp.status)}
-                <span className="text-xs font-bold font-mono text-slate-200 truncate">{comp.name}</span>
+                <span className="text-xs font-bold font-mono text-slate-900 truncate">{comp.name}</span>
               </div>
-              <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-semibold uppercase border ${getStatusBadge(comp.status)}`}>
+              <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold uppercase shrink-0 border ${getStatusBadge(comp.status)}`}>
                 {comp.status}
               </span>
             </div>
-            <p className="text-[11px] font-mono text-slate-400 leading-relaxed">{comp.details}</p>
+            <p className="text-[11px] font-mono text-slate-600 leading-relaxed">{comp.details}</p>
           </div>
         ))}
         {!healthData && !healthError && loading && (
-          <p className="col-span-full py-4 text-center text-sm text-slate-400">
+          <p className="col-span-full py-6 text-center text-sm text-slate-500 font-mono">
             Checking backend health…
           </p>
         )}

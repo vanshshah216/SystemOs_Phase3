@@ -39,34 +39,40 @@ export default function Sidebar() {
     <aside
       className={`${
         collapsed ? "w-16" : "w-64"
-      } min-h-screen bg-[#11171f] border-r border-[#29323d] flex flex-col justify-between select-none transition-all duration-300 z-30 shrink-0 sticky top-0 h-screen`}
+      } min-h-screen bg-white/90 backdrop-blur-2xl border-r border-[#E5EAF1] flex flex-col justify-between select-none transition-all duration-300 z-30 shrink-0 sticky top-0 h-screen shadow-xs`}
     >
       {/* Top Brand Section */}
       <div>
-        <div className="h-16 border-b border-[#29323d] flex items-center justify-between px-4">
+        <div className="h-16 border-b border-[#E5EAF1] flex items-center justify-between px-4">
           {!collapsed ? (
-            <div>
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded bg-sky-500/10 border border-sky-500/30 flex items-center justify-center text-sky-400 font-mono font-bold text-xs">
-                  S
+            <Link href="/overview" className="flex items-center gap-2.5 group">
+              <img
+                src="/systemos-logo.png"
+                alt="SystemOS logo"
+                className="systemos-logo w-9 h-9 object-contain shrink-0 transition-transform duration-200 group-hover:scale-105"
+              />
+              <div>
+                <div className="font-mono text-base font-bold tracking-tight text-[#172033]">
+                  SYSTEM<span className="text-[#2563EB]">OS</span>
                 </div>
-                <span className="font-mono text-base font-bold tracking-wider text-slate-100">
-                  SYSTEM<span className="text-sky-400">OS</span>
-                </span>
+                <div className="text-[10px] text-[#667085] font-sans font-medium tracking-tight">
+                  Statistical Observability
+                </div>
               </div>
-              <div className="text-[10px] text-slate-400 font-sans tracking-tight">
-                Statistical Performance Monitoring
-              </div>
-            </div>
+            </Link>
           ) : (
-            <div className="w-8 h-8 rounded bg-sky-500/10 border border-sky-500/30 flex items-center justify-center text-sky-400 font-mono font-bold text-sm mx-auto">
-              S
-            </div>
+            <Link href="/overview" className="mx-auto group" title="SystemOS">
+              <img
+                src="/systemos-logo.png"
+                alt="SystemOS logo"
+                className="systemos-logo w-9 h-9 object-contain mx-auto transition-transform duration-200 group-hover:scale-105"
+              />
+            </Link>
           )}
 
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className="hidden md:flex p-1.5 rounded-md hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-colors"
+            className="hidden md:flex p-1.5 rounded-lg hover:bg-[#F1F4F8] text-[#667085] hover:text-[#172033] transition-colors"
             title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
             {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
@@ -81,14 +87,14 @@ export default function Sidebar() {
               <Link
                 key={href}
                 href={href}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
                   active
-                    ? "bg-sky-500/10 text-sky-400 font-semibold border border-sky-500/20"
-                    : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 border border-transparent"
+                    ? "bg-[#EFF6FF] text-[#2563EB] font-semibold border border-[#BFDBFE]/80 shadow-xs"
+                    : "text-[#667085] hover:text-[#172033] hover:bg-[#F8FAFC] border border-transparent"
                 }`}
                 title={collapsed ? label : undefined}
               >
-                <Icon className={`w-4 h-4 shrink-0 ${active ? "text-sky-400" : "text-slate-400"}`} />
+                <Icon className={`w-4 h-4 shrink-0 transition-transform duration-200 ${active ? "text-[#2563EB] scale-110" : "text-[#98A2B3]"}`} />
                 {!collapsed && <span>{label}</span>}
               </Link>
             );
@@ -97,47 +103,51 @@ export default function Sidebar() {
       </div>
 
       {/* Bottom Service Health Deck */}
-      <div className="p-3 border-t border-[#29323d] bg-[#090e18] text-xs font-mono space-y-2">
+      <div className="p-3 border-t border-[#E5EAF1] bg-[#F8FAFC]/90 backdrop-blur-md text-xs font-mono space-y-2">
         {!collapsed ? (
           <div className="space-y-2 py-1">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-[#98A2B3] px-1">
+              Engine Status
+            </div>
+
             {/* Collector */}
-            <div className="flex items-center justify-between text-slate-400">
-              <span className="flex items-center gap-1.5">
-                <Radio className="w-3.5 h-3.5 text-slate-500" />
+            <div className="flex items-center justify-between text-[#667085] px-1">
+              <span className="flex items-center gap-1.5 font-sans text-xs">
+                <Radio className="w-3.5 h-3.5 text-[#98A2B3]" />
                 Collector
               </span>
-              <span className="flex items-center gap-1 text-[11px]">
-                <span className={`w-2 h-2 rounded-full ${health?.collector_running ? "bg-slate-500" : healthError ? "bg-amber-400" : "bg-slate-600"}`} />
-                <span className={health?.collector_running ? "text-slate-300" : healthError ? "text-amber-300" : "text-slate-400"}>
-                  {health?.collector_running ? "Running" : healthError ? "Unavailable" : "Checking"}
+              <span className="flex items-center gap-1 text-[11px] font-mono">
+                <span className={`w-2 h-2 rounded-full ${health?.collector_running ? "bg-[#16A34A] animate-pulse" : healthError ? "bg-[#DC2626]" : "bg-[#D97706]"}`} />
+                <span className={health?.collector_running ? "text-[#16A34A] font-semibold" : healthError ? "text-[#DC2626]" : "text-[#D97706]"}>
+                  {health?.collector_running ? "Active" : healthError ? "Offline" : "Checking"}
                 </span>
               </span>
             </div>
 
             {/* Database */}
-            <div className="flex items-center justify-between text-slate-400">
-              <span className="flex items-center gap-1.5">
-                <Database className="w-3.5 h-3.5 text-slate-500" />
+            <div className="flex items-center justify-between text-[#667085] px-1">
+              <span className="flex items-center gap-1.5 font-sans text-xs">
+                <Database className="w-3.5 h-3.5 text-[#98A2B3]" />
                 Database
               </span>
-              <span className="flex items-center gap-1 text-[11px]">
-                <span className={`w-2 h-2 rounded-full ${health?.database_ok ? "bg-slate-500" : healthError ? "bg-amber-400" : "bg-slate-600"}`} />
-                <span className={health?.database_ok ? "text-slate-300" : healthError ? "text-amber-300" : "text-slate-400"}>
-                  {health?.database_ok ? "Connected" : healthError ? "Unavailable" : "Checking"}
+              <span className="flex items-center gap-1 text-[11px] font-mono">
+                <span className={`w-2 h-2 rounded-full ${health?.database_ok ? "bg-[#16A34A]" : healthError ? "bg-[#DC2626]" : "bg-[#D97706]"}`} />
+                <span className={health?.database_ok ? "text-[#16A34A] font-semibold" : healthError ? "text-[#DC2626]" : "text-[#D97706]"}>
+                  {health?.database_ok ? "Connected" : healthError ? "Offline" : "Checking"}
                 </span>
               </span>
             </div>
 
             {/* API */}
-            <div className="flex items-center justify-between text-slate-400">
-              <span className="flex items-center gap-1.5">
-                <Server className="w-3.5 h-3.5 text-slate-500" />
-                API
+            <div className="flex items-center justify-between text-[#667085] px-1">
+              <span className="flex items-center gap-1.5 font-sans text-xs">
+                <Server className="w-3.5 h-3.5 text-[#98A2B3]" />
+                FastAPI
               </span>
-              <span className="flex items-center gap-1 text-[11px]">
-                <span className={`w-2 h-2 rounded-full ${healthError ? "bg-amber-400" : "bg-slate-500"}`} />
-                <span className={healthError ? "text-amber-300" : "text-slate-300"}>
-                  {healthError ? "Unavailable" : "Available"}
+              <span className="flex items-center gap-1 text-[11px] font-mono">
+                <span className={`w-2 h-2 rounded-full ${healthError ? "bg-[#DC2626]" : "bg-[#16A34A]"}`} />
+                <span className={healthError ? "text-[#DC2626]" : "text-[#16A34A] font-semibold"}>
+                  {healthError ? "Unavailable" : "Ready"}
                 </span>
               </span>
             </div>
@@ -145,14 +155,14 @@ export default function Sidebar() {
         ) : (
           <div className="flex flex-col items-center gap-2 py-1">
             <span
-              className={`w-2.5 h-2.5 rounded-full ${health?.collector_running ? "bg-slate-500" : healthError ? "bg-amber-400" : "bg-slate-600"}`}
-              title={`Collector: ${health?.collector_running ? "Running" : healthError ? "Unavailable" : "Checking"}`}
+              className={`w-2.5 h-2.5 rounded-full ${health?.collector_running ? "bg-[#16A34A]" : healthError ? "bg-[#DC2626]" : "bg-[#D97706]"}`}
+              title={`Collector: ${health?.collector_running ? "Active" : healthError ? "Offline" : "Checking"}`}
             />
             <span
-              className={`w-2.5 h-2.5 rounded-full ${health?.database_ok ? "bg-slate-500" : healthError ? "bg-amber-400" : "bg-slate-600"}`}
-              title={`Database: ${health?.database_ok ? "Connected" : healthError ? "Unavailable" : "Checking"}`}
+              className={`w-2.5 h-2.5 rounded-full ${health?.database_ok ? "bg-[#16A34A]" : healthError ? "bg-[#DC2626]" : "bg-[#D97706]"}`}
+              title={`Database: ${health?.database_ok ? "Connected" : healthError ? "Offline" : "Checking"}`}
             />
-            <span className={`w-2.5 h-2.5 rounded-full ${healthError ? "bg-amber-400" : "bg-slate-500"}`} title={`API: ${healthError ? "Unavailable" : "Available"}`} />
+            <span className={`w-2.5 h-2.5 rounded-full ${healthError ? "bg-[#DC2626]" : "bg-[#16A34A]"}`} title={`API: ${healthError ? "Unavailable" : "Ready"}`} />
           </div>
         )}
       </div>

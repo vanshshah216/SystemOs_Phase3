@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useCurrentMetrics, useHealth } from "@/hooks/useMetrics";
 import { usePollingSettings } from "@/hooks/usePollingSettings";
 import { timeAgo } from "@/lib/utils";
@@ -45,18 +46,18 @@ export default function TopBar({ title, subtitle, onRefreshComplete }: TopBarPro
   const statusConfig = {
     healthy: {
       label: "Operational",
-      badge: "bg-slate-500/10 text-slate-300 border-slate-700",
-      dot: "bg-emerald-400",
+      badge: "bg-[#F0FDF4] text-[#16A34A] border-[#BBF7D0]",
+      dot: "bg-[#16A34A]",
     },
     warning: {
       label: collectorOffline ? "Offline" : "Warning",
-      badge: "bg-amber-500/10 text-amber-400 border-amber-500/30",
-      dot: "bg-amber-500",
+      badge: "bg-[#FFFBEB] text-[#D97706] border-[#FDE68A]",
+      dot: "bg-[#D97706]",
     },
     critical: {
       label: "Critical",
-      badge: "bg-rose-500/10 text-rose-400 border-rose-500/30",
-      dot: "bg-rose-500",
+      badge: "bg-[#FEF2F2] text-[#DC2626] border-[#FECACA]",
+      dot: "bg-[#DC2626]",
     },
   }[status];
 
@@ -79,14 +80,21 @@ export default function TopBar({ title, subtitle, onRefreshComplete }: TopBarPro
   };
 
   return (
-    <header className="min-h-16 border-b border-[#29323d] bg-[#11171f]/95 px-5 sm:px-6 py-2 flex flex-wrap items-center justify-between gap-x-5 gap-y-2 sticky top-0 z-20 shrink-0">
-      <div>
-        <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-          <h1 className="text-lg font-semibold text-slate-100 font-sans tracking-tight">
+    <header className="min-h-16 border-b border-[#E5EAF1] bg-white/85 backdrop-blur-xl px-5 sm:px-8 py-2.5 flex flex-wrap items-center justify-between gap-x-5 gap-y-2 sticky top-0 z-20 shrink-0 shadow-xs">
+      <div className="flex items-center gap-3">
+        <Link href="/overview" className="sm:hidden shrink-0" title="SystemOS Home">
+          <img
+            src="/systemos-logo.png"
+            alt="SystemOS logo"
+            className="systemos-logo h-7 w-7 object-contain shrink-0"
+          />
+        </Link>
+        <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-0.5">
+          <h1 className="text-lg font-bold text-[#172033] font-sans tracking-tight">
             {title || "System Monitor"}
           </h1>
           {subtitle && (
-            <span className="text-xs text-slate-400 font-normal">{subtitle}</span>
+            <span className="text-xs text-[#667085] font-medium">{subtitle}</span>
           )}
         </div>
       </div>
@@ -96,46 +104,46 @@ export default function TopBar({ title, subtitle, onRefreshComplete }: TopBarPro
           type="button"
           onClick={handleRefresh}
           disabled={refreshing}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#303a46] bg-[#171e28] hover:bg-[#202833] text-slate-200 disabled:opacity-50 transition-colors"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[#E5EAF1] bg-white hover:bg-[#F8FAFC] text-[#172033] shadow-xs hover:border-[#BFDBFE] disabled:opacity-50 transition-all duration-200 active:scale-[0.98] font-medium"
           title="Collect fresh telemetry now"
         >
-          <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`} />
+          <RefreshCw className={`w-3.5 h-3.5 text-[#2563EB] ${refreshing ? "animate-spin" : ""}`} />
           <span className="hidden sm:inline">Refresh</span>
         </button>
         {refreshError && (
-          <span className="hidden lg:inline max-w-48 truncate text-amber-300" title={refreshError}>
+          <span className="hidden lg:inline max-w-48 truncate text-[#DC2626] font-medium" title={refreshError}>
             Refresh failed
           </span>
         )}
 
         <div className="flex items-center gap-2">
-          <span className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg border font-medium text-xs ${statusConfig.badge}`}>
-            <span className={`w-1.5 h-1.5 rounded-full ${statusConfig.dot}`} />
+          <span className={`flex items-center gap-2 px-3 py-1.5 rounded-full border font-semibold text-xs shadow-xs ${statusConfig.badge}`}>
+            <span className={`w-2 h-2 rounded-full ${statusConfig.dot} animate-pulse`} />
             {!health && !collectorOffline ? "Checking" : statusConfig.label}
           </span>
         </div>
 
-        <div className="h-4 w-px bg-slate-800 hidden sm:block" />
+        <div className="h-4 w-px bg-[#E5EAF1] hidden sm:block" />
 
-        <div className="hidden md:flex items-center gap-1.5 text-slate-400">
-          <Radio className={`w-3.5 h-3.5 ${!collectorOffline ? "text-slate-500" : "text-amber-400"}`} />
-          <span className="text-slate-300">
+        <div className="hidden md:flex items-center gap-1.5 text-[#667085]">
+          <Radio className={`w-3.5 h-3.5 ${!collectorOffline ? "text-[#16A34A]" : "text-[#D97706]"}`} />
+          <span className="text-[#172033] font-medium">
             {!health && !collectorOffline ? "Checking" : !collectorOffline ? "Active" : "Unavailable"}
           </span>
         </div>
 
-        <div className="h-4 w-px bg-slate-800 hidden md:block" />
+        <div className="h-4 w-px bg-[#E5EAF1] hidden md:block" />
 
-        <div className="hidden lg:flex items-center gap-1.5 text-slate-400">
-          <Activity className="w-3.5 h-3.5 text-slate-500" />
+        <div className="hidden lg:flex items-center gap-1.5 text-[#667085]">
+          <Activity className="w-3.5 h-3.5 text-[#2563EB]" />
           <span>Every {intervalSec}s</span>
         </div>
 
-        <div className="h-4 w-px bg-slate-800 hidden lg:block" />
+        <div className="h-4 w-px bg-[#E5EAF1] hidden lg:block" />
 
-        <div className="hidden xl:flex items-center gap-1.5 text-slate-400">
-          <Clock className="w-3.5 h-3.5 text-slate-500" />
-          <span className="text-slate-300">
+        <div className="hidden xl:flex items-center gap-1.5 text-[#667085]">
+          <Clock className="w-3.5 h-3.5 text-[#98A2B3]" />
+          <span className="text-[#172033] font-medium">
             {updatedTs ? timeAgo(updatedTs) : "—"}
           </span>
         </div>

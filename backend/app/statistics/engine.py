@@ -19,15 +19,17 @@ def has_enough_data(values: list) -> bool:
 
 
 def compute_mean(values: list[float]) -> Optional[float]:
-    if not has_enough_data(values):
+    clean = [v for v in values if v is not None]
+    if not has_enough_data(clean):
         return None
-    return float(np.mean(values))
+    return float(np.mean(clean))
 
 
 def compute_std(values: list[float]) -> Optional[float]:
-    if not has_enough_data(values):
+    clean = [v for v in values if v is not None]
+    if not has_enough_data(clean):
         return None
-    std = float(np.std(values, ddof=1))  # sample std
+    std = float(np.std(clean, ddof=1))  # sample std
     return std if std > 0 else None
 
 
@@ -40,9 +42,10 @@ def compute_zscore(current: float, mean: float, std: float) -> Optional[float]:
 
 def compute_percentiles(values: list[float]) -> dict:
     """Returns P50, P90, P95, P99 of the provided values."""
-    if not has_enough_data(values):
+    clean = [v for v in values if v is not None]
+    if not has_enough_data(clean):
         return {"p50": None, "p90": None, "p95": None, "p99": None}
-    arr = np.array(values)
+    arr = np.array(clean)
     return {
         "p50": float(np.percentile(arr, 50)),
         "p90": float(np.percentile(arr, 90)),
@@ -57,11 +60,12 @@ def compute_trend_slope(values: list[float]) -> Optional[float]:
     Positive slope → rising trend. Negative slope → falling trend.
     Returns slope per sample (not per second).
     """
-    if not has_enough_data(values):
+    clean = [v for v in values if v is not None]
+    if not has_enough_data(clean):
         return None
-    n = len(values)
+    n = len(clean)
     x = np.arange(n, dtype=float)
-    y = np.array(values, dtype=float)
+    y = np.array(clean, dtype=float)
     # np.polyfit degree 1
     try:
         slope, _ = np.polyfit(x, y, 1)

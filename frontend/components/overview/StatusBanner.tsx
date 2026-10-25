@@ -9,39 +9,39 @@ interface StatusBannerProps {
 const config = {
   healthy: {
     icon: CheckCircle2,
-    color: "text-slate-300",
-    border: "border-[#29323d]",
-    bg: "bg-[#151b23]",
-    badge: "bg-slate-500/10 text-slate-300 border-slate-700",
+    color: "text-[#16A34A]",
+    border: "border-[#BBF7D0]",
+    bg: "bg-[#F0FDF4]/90",
+    badge: "bg-white text-[#16A34A] border-[#BBF7D0]",
     title: "System is running normally",
-    description: "No sustained performance issues detected in the latest samples.",
+    description: "No sustained performance bottlenecks or anomalous spikes detected in the latest samples.",
   },
   warning: {
     icon: AlertTriangle,
-    color: "text-amber-300",
-    border: "border-amber-500/25",
-    bg: "bg-[#171a1d]",
-    badge: "bg-amber-500/10 text-amber-300 border-amber-500/25",
-    title: "A metric is outside its usual range",
-    description: "Monitoring continues. Review the measured values and diagnostic evidence for context.",
+    color: "text-[#D97706]",
+    border: "border-[#FDE68A]",
+    bg: "bg-[#FFFBEB]/90",
+    badge: "bg-white text-[#D97706] border-[#FDE68A]",
+    title: "Metric variance outside usual historical range",
+    description: "Statistical monitoring is active. Review measured values and diagnostic evidence for attribution context.",
   },
   critical: {
     icon: XCircle,
-    color: "text-rose-300",
-    border: "border-rose-500/30",
-    bg: "bg-[#1a171a]",
-    badge: "bg-rose-500/10 text-rose-300 border-rose-500/25",
-    title: "Sustained performance issue detected",
-    description: "The condition has persisted across multiple samples. Review the diagnostic evidence before taking action.",
+    color: "text-[#DC2626]",
+    border: "border-[#FECACA]",
+    bg: "bg-[#FEF2F2]/90",
+    badge: "bg-white text-[#DC2626] border-[#FECACA]",
+    title: "Sustained performance bottleneck detected",
+    description: "The condition has persisted across consecutive sampling cycles. Review root-cause diagnostic evidence.",
   },
 };
 
 export default function StatusBanner({ status, loading }: StatusBannerProps) {
   if (loading || !status) {
     return (
-      <div className="flex items-center gap-3 rounded-xl border border-[#29323d] bg-[#151b23] p-5">
-        <Loader2 className="h-5 w-5 animate-spin text-slate-400" />
-        <p className="text-sm text-slate-300">Checking recent system activity…</p>
+      <div className="flex items-center gap-3 rounded-2xl border border-[#E5EAF1] bg-white/80 backdrop-blur-md p-5 shadow-xs">
+        <Loader2 className="h-5 w-5 animate-spin text-[#2563EB]" />
+        <p className="text-sm font-medium text-[#667085]">Checking recent system activity…</p>
       </div>
     );
   }
@@ -50,19 +50,19 @@ export default function StatusBanner({ status, loading }: StatusBannerProps) {
   const Icon = current.icon;
 
   return (
-    <section className={`rounded-xl border ${current.border} ${current.bg} p-5`}>
-      <div className="flex items-start gap-3">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-[#303a46] bg-[#11171f]">
+    <section className={`rounded-2xl border ${current.border} ${current.bg} p-5 backdrop-blur-md shadow-xs transition-all duration-300`}>
+      <div className="flex items-start gap-3.5">
+        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border ${current.border} bg-white shadow-2xs`}>
           <Icon className={`h-5 w-5 ${current.color}`} />
         </div>
         <div>
           <div className="flex flex-wrap items-center gap-2">
-            <h2 className="text-base font-semibold text-slate-100">{current.title}</h2>
-            <span className={`rounded-md border px-2 py-0.5 text-[11px] font-medium ${current.badge}`}>
-              {status === "healthy" ? "Up to date" : status === "warning" ? "Review" : "Attention"}
+            <h2 className="text-base font-bold text-[#172033]">{current.title}</h2>
+            <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold font-mono ${current.badge}`}>
+              {status.toUpperCase()}
             </span>
           </div>
-          <p className="mt-1 text-sm leading-relaxed text-slate-400">{current.description}</p>
+          <p className="mt-1 text-sm text-[#667085] leading-relaxed">{current.description}</p>
         </div>
       </div>
     </section>

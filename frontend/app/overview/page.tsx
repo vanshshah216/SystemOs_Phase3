@@ -30,20 +30,28 @@ export default function OverviewPage() {
     : null;
 
   return (
-    <div className="flex-1 flex flex-col min-w-0 bg-[#0d1117]">
+    <div className="flex-1 flex flex-col min-w-0 bg-[#FAFCFF]">
       {/* Sticky Clean Header */}
-      <TopBar title="Overview" subtitle="Real-Time Telemetry" />
+      <TopBar title="Overview" subtitle="Real-Time System Telemetry" />
 
       {/* Spacious Main Scrollable Content Container */}
-      <main className="flex-1 px-6 sm:px-8 lg:px-10 py-8 max-w-[1440px] w-full mx-auto space-y-8">
+      <main className="flex-1 px-6 sm:px-8 lg:px-10 py-8 max-w-[1440px] w-full mx-auto space-y-8 animate-fade-in-up">
         {/* SECTION 1: System Overview Header */}
-        <div>
-          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-100 font-sans">
-            Your system at a glance
-          </h2>
-          <p className="text-sm text-slate-400 font-sans mt-1">
-            Real-time performance monitoring and explainable root-cause diagnosis.
-          </p>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="w-2 h-2 rounded-full bg-[#2563EB]" />
+              <span className="text-xs font-mono font-bold tracking-wider text-[#2563EB] uppercase">
+                Host Performance Dashboard
+              </span>
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#172033] font-sans">
+              System Telemetry Overview
+            </h2>
+            <p className="text-sm text-[#667085] font-sans mt-1">
+              Statistical performance baselines, persistence tracking, and explainable root-cause diagnosis.
+            </p>
+          </div>
         </div>
 
         {/* SECTION 2: Four Core Metric Cards */}

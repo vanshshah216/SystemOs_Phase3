@@ -86,7 +86,7 @@ export default function InfoMenuModal() {
             href="/overview"
             className="py-3 px-4 rounded-2xl glass-panel-badge flex items-center justify-center gap-2 text-xs font-mono text-slate-200 hover:text-cyan-400 transition-colors"
           >
-            <LayoutDashboard className="w-4 h-4 text-cyan-400" />
+            <img src="/systemos-logo.png" alt="SystemOS logo" className="systemos-logo w-4 h-4 object-contain" />
             <span>SystemOS Monitor</span>
           </Link>
         </div>

@@ -30,6 +30,13 @@ export default function MetricCard({
   };
   const Icon = (icons as Record<string, LucideIcon>)[label] || Cpu;
 
+  const iconStyles: Record<string, string> = {
+    CPU: "bg-[#EFF6FF] text-[#2563EB] border-[#BFDBFE]",
+    RAM: "bg-[#F5F3FF] text-[#7C3AED] border-[#DDD6FE]",
+    DISK: "bg-[#FFFBEB] text-[#D97706] border-[#FDE68A]",
+    NETWORK: "bg-[#F0FDF4] text-[#16A34A] border-[#BBF7D0]",
+  };
+
   const hasBaseline = context?.has_baseline && context.mean != null;
   const mean = context?.mean ?? 0;
   const isAnomaly = context?.is_anomaly;
@@ -38,21 +45,21 @@ export default function MetricCard({
 
   // Determine deviation text
   let deviationText = "Normal range";
-  let deviationColor = "text-slate-400";
+  let deviationColor = "text-[#667085]";
 
   if (hasBaseline && currentValue != null && mean > 0) {
     if (label === "CPU" || label === "RAM") {
       const diff = currentValue - mean;
       const sign = diff >= 0 ? "+" : "";
-      deviationText = `${sign}${diff.toFixed(1)}% from baseline`;
-      if (diff > 5 && isSustained) deviationColor = "text-rose-400 font-semibold";
-      else if (diff > 5 && isAnomaly) deviationColor = "text-amber-400 font-semibold";
-      else if (diff < -5) deviationColor = "text-slate-400";
+      deviationText = `${sign}${diff.toFixed(1)}% vs baseline`;
+      if (diff > 5 && isSustained) deviationColor = "text-[#DC2626] font-semibold";
+      else if (diff > 5 && isAnomaly) deviationColor = "text-[#D97706] font-semibold";
+      else if (diff < -5) deviationColor = "text-[#667085]";
     } else {
       const pctChange = ((currentValue - mean) / mean) * 100;
       const sign = pctChange >= 0 ? "+" : "";
-      deviationText = `${sign}${pctChange.toFixed(0)}% from baseline`;
-      if (pctChange > 20 && (isSustained || isAnomaly)) deviationColor = "text-amber-400 font-semibold";
+      deviationText = `${sign}${pctChange.toFixed(0)}% vs baseline`;
+      if (pctChange > 20 && (isSustained || isAnomaly)) deviationColor = "text-[#D97706] font-semibold";
     }
   } else if (!hasBaseline) {
     deviationText = "Calibrating baseline";
@@ -60,17 +67,17 @@ export default function MetricCard({
 
   // Determine status label and badge
   let statusLabel = "Healthy";
-  let statusBadge = "bg-slate-500/10 text-slate-300 border-slate-700";
+  let statusBadge = "bg-[#F0FDF4] text-[#16A34A] border-[#BBF7D0]";
 
   if (isSustained) {
     statusLabel = "Sustained";
-    statusBadge = "bg-rose-500/10 text-rose-400 border-rose-500/30";
+    statusBadge = "bg-[#FEF2F2] text-[#DC2626] border-[#FECACA]";
   } else if (isAnomaly || (zscore != null && zscore >= 2.0)) {
     statusLabel = "Elevated";
-    statusBadge = "bg-amber-500/10 text-amber-400 border-amber-500/30";
+    statusBadge = "bg-[#FFFBEB] text-[#D97706] border-[#FDE68A]";
   } else if (!hasBaseline) {
-    statusLabel = "Learning";
-    statusBadge = "bg-sky-500/10 text-sky-400 border-sky-500/20";
+    statusLabel = "Calibrating";
+    statusBadge = "bg-[#EFF6FF] text-[#2563EB] border-[#BFDBFE]";
   }
 
   const baselineDisplay = hasBaseline
@@ -80,44 +87,49 @@ export default function MetricCard({
     : "—";
 
   return (
-    <div className="bg-[#151b23] border border-[#29323d] rounded-xl p-6 sm:p-7 flex flex-col justify-between min-h-[175px] hover:border-slate-700 transition-colors shadow-sm">
+    <div className="liquid-glass-card-interactive p-6 flex flex-col justify-between min-h-[175px] shadow-xs">
       {/* Top row: Label & Status Badge */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2.5">
-          <div className="p-2 rounded-lg bg-slate-800/80 text-sky-400 border border-slate-700/60">
+          <div className={`p-2 rounded-xl border ${iconStyles[label] || "bg-[#EFF6FF] text-[#2563EB] border-[#BFDBFE]"}`}>
             <Icon className="w-4 h-4" />
           </div>
-          <span className="text-xs font-semibold uppercase tracking-wider text-slate-400 font-mono">
+          <span className="text-xs font-bold uppercase tracking-wider text-[#667085] font-mono">
             {label}
           </span>
         </div>
 
-        <span className={`text-xs font-medium px-2.5 py-1 rounded-md border font-mono ${statusBadge}`}>
+        <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full border font-mono shadow-2xs ${statusBadge}`}>
           {statusLabel}
         </span>
       </div>
 
       {/* Middle row: Large current value + Unit */}
-      <div className="flex items-baseline gap-2 my-2">
-        <span className="text-3xl sm:text-4xl font-bold font-mono tracking-tight text-slate-100">
+      <div className="flex items-baseline gap-1.5 my-3">
+        <span className="text-3xl sm:text-4xl font-extrabold font-mono tracking-tight text-[#172033]">
           {formattedValue}
         </span>
-        {unit && <span className="text-sm font-medium font-mono text-slate-500">{unit}</span>}
+        {unit && <span className="text-sm font-semibold font-mono text-[#98A2B3]">{unit}</span>}
       </div>
 
       {/* Bottom section: Baseline & Deviation */}
-      <div className="pt-3.5 border-t border-[#29323d] space-y-1.5 text-xs font-mono">
-        <div className="flex items-center justify-between text-slate-400">
-          <span className="flex items-center text-slate-500 text-xs font-sans">
-            Baseline <Tooltip term="baseline" explanation="" />
+      <div className="pt-3.5 border-t border-[#EDF0F5] space-y-1.5 text-xs font-mono">
+        <div className="flex items-center justify-between text-[#667085]">
+          <span className="text-[#98A2B3] flex items-center gap-1">
+            Baseline
+            <Tooltip term="baseline" explanation="Historical rolling mean" />
           </span>
-          <span className="text-slate-300 font-semibold">{baselineDisplay}</span>
+          <span className="text-[#172033] font-semibold">{baselineDisplay}</span>
         </div>
 
-        <div className="flex items-center justify-between gap-1">
-          <span className="text-slate-500 text-[11px] font-sans shrink-0">Deviation</span>
-          <span className={`font-mono text-[11px] text-right truncate ${deviationColor}`}>
+        <div className="flex items-center justify-between">
+          <span className="text-[#98A2B3] flex items-center gap-1">
+            Status
+            {zscore != null && <Tooltip term="zscore" explanation="Z-score anomaly measurement" />}
+          </span>
+          <span className={deviationColor}>
             {deviationText}
+            {zscore != null && Math.abs(zscore) >= 1.5 && ` (z=${zscore.toFixed(1)})`}
           </span>
         </div>
       </div>

@@ -24,17 +24,17 @@ export default function Tooltip({ term, explanation, children }: TooltipProps) {
   return (
     <span className="relative inline-flex items-center">
       <span
-        className="inline-flex items-center cursor-help text-slate-400 hover:text-slate-200 transition-colors"
+        className="inline-flex items-center cursor-help text-[#98A2B3] hover:text-[#2563EB] transition-colors"
         onMouseEnter={() => setVisible(true)}
         onMouseLeave={() => setVisible(false)}
       >
-        {children || <HelpCircle className="w-3.5 h-3.5 ml-1 text-slate-500 hover:text-sky-400" />}
+        {children || <HelpCircle className="w-3.5 h-3.5 ml-1 text-[#98A2B3] hover:text-[#2563EB]" />}
       </span>
 
       {visible && (
-        <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-60 p-2.5 bg-slate-900 border border-slate-700 text-slate-200 text-xs font-sans rounded-md shadow-2xl z-50 pointer-events-none leading-relaxed text-left">
+        <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3 bg-white/95 backdrop-blur-xl border border-[#E5EAF1] text-[#172033] text-xs font-sans rounded-xl shadow-xl z-50 pointer-events-none leading-relaxed text-left">
           {text}
-          <span className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-700" />
+          <span className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-[#E5EAF1]" />
         </span>
       )}
     </span>

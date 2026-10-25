@@ -43,16 +43,16 @@ export default function EventsPage() {
   }, [events, filter, search]);
 
   return (
-    <div className="flex-1 flex flex-col min-w-0 bg-[#0d1117]">
+    <div className="flex-1 flex flex-col min-w-0 bg-[#FAFCFF]">
       <TopBar title="Event History" subtitle="Forensic Audit Log" />
 
       <main className="flex-1 px-6 sm:px-8 lg:px-10 py-8 max-w-[1440px] w-full mx-auto space-y-8">
         {/* Header */}
         <div>
-          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-100 font-sans">
+          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#172033] font-sans">
             Event history
           </h2>
-          <p className="text-sm text-slate-400 font-sans mt-1">
+          <p className="text-sm text-[#667085] font-sans mt-1">
             Performance incidents, application starts, and optional browser-tab activity. Tab titles are collected locally; URLs and page contents are not.
           </p>
         </div>
@@ -60,15 +60,15 @@ export default function EventsPage() {
         {/* Filters and Search */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           {/* Category Filters */}
-          <div className="flex items-center gap-1 bg-[#151b23] border border-[#29323d] p-1.5 rounded-lg overflow-x-auto">
+          <div className="flex items-center gap-1 bg-white/85 border border-slate-200/80 p-1.5 rounded-xl overflow-x-auto shadow-xs backdrop-blur-md">
             {FILTERS.map(f => (
               <button
                 key={f.id}
                 onClick={() => setFilter(f.id)}
-                className={`px-3 py-1.5 rounded text-xs font-mono font-medium transition-colors shrink-0 ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition-all shrink-0 ${
                   filter === f.id
-                    ? "bg-sky-500/20 text-sky-400 font-bold border border-sky-500/30"
-                    : "text-slate-400 hover:text-slate-200"
+                    ? "bg-blue-600 text-white font-bold shadow-xs"
+                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/70"
                 }`}
               >
                 {f.label}
@@ -78,23 +78,23 @@ export default function EventsPage() {
 
           {/* Search Box */}
           <div className="relative">
-            <Search className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="Filter by event, app, or tab title..."
-              className="bg-[#151b23] border border-[#29323d] focus:border-sky-500/50 rounded-lg pl-9 pr-4 py-2 text-xs font-mono text-slate-200 placeholder-slate-500 outline-none w-full sm:w-64 transition-colors"
+              className="bg-white border border-slate-200/80 focus:border-blue-500 rounded-xl pl-9 pr-4 py-2 text-xs font-mono text-slate-800 placeholder-slate-400 outline-none w-full sm:w-72 shadow-xs transition-colors"
             />
           </div>
         </div>
 
         {/* Events Table */}
-        <div className="bg-[#151b23] border border-[#29323d] rounded-xl overflow-hidden shadow-sm">
+        <div className="bg-white/90 border border-slate-200/80 rounded-2xl overflow-hidden shadow-sm shadow-slate-200/50 backdrop-blur-xl">
           <div className="overflow-x-auto">
             <table className="w-full text-xs font-mono">
               <thead>
-                <tr className="border-b border-[#29323d] bg-[#11171f] text-slate-400">
+                <tr className="border-b border-slate-200 bg-slate-50/80 text-slate-600">
                   <th className="text-left py-3.5 px-4 font-semibold">Severity</th>
                   <th className="text-left py-3.5 px-4 font-semibold">Probable Cause</th>
                   <th className="text-left py-3.5 px-4 font-semibold">Process Association</th>
@@ -104,22 +104,22 @@ export default function EventsPage() {
                   <th className="py-3.5 px-4"></th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#29323d]/60">
+              <tbody className="divide-y divide-slate-100">
                 {loading && events.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="py-16 text-center text-slate-500 font-mono">
+                    <td colSpan={7} className="py-16 text-center text-slate-400 font-mono">
                       Loading event history...
                     </td>
                   </tr>
                 ) : error && events.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="py-16 text-center text-amber-300 font-mono">
+                    <td colSpan={7} className="py-16 text-center text-amber-700 font-mono">
                       Event history is unavailable: {error}
                     </td>
                   </tr>
                 ) : filteredEvents.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="py-16 text-center text-slate-500 font-mono">
+                    <td colSpan={7} className="py-16 text-center text-slate-400 font-mono">
                       No events match the selected criteria.
                     </td>
                   </tr>
@@ -135,58 +135,52 @@ export default function EventsPage() {
                     return (
                       <tr
                         key={event.id}
-                        className="h-14 hover:bg-slate-800/40 transition-colors group cursor-pointer"
+                        className="h-14 hover:bg-blue-50/30 transition-colors group cursor-pointer"
                       >
                         <td className="py-3.5 px-4">
                           <span
-                            className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold border ${
+                            className={`inline-block px-2 py-0.5 rounded-md text-[10px] font-bold border ${
                               isHigh
-                                ? "bg-rose-500/10 text-rose-400 border-rose-500/30"
+                                ? "bg-rose-50 text-rose-700 border-rose-200"
                                 : isMedium
-                                ? "bg-amber-500/10 text-amber-400 border-amber-500/30"
-                                : "bg-sky-500/10 text-sky-400 border-sky-500/30"
+                                ? "bg-amber-50 text-amber-700 border-amber-200"
+                                : "bg-blue-50 text-blue-700 border-blue-200"
                             }`}
                           >
                             {isBrowserTabActivity ? "TAB" : isApplicationStart ? "APP" : event.severity}
                           </span>
                         </td>
 
-                        <td className="py-3.5 px-4 text-slate-200 font-semibold max-w-sm truncate">
-                          {isActivityEvent ? (
-                            <Link href={`/events/${event.id}`} className="hover:text-sky-400">
-                              {event.probable_cause}
-                            </Link>
-                          ) : (
-                            <Link href={`/events/${event.id}`} className="hover:text-sky-400">
-                              {event.probable_cause}
-                            </Link>
-                          )}
+                        <td className="py-3.5 px-4 text-slate-900 font-semibold max-w-sm truncate">
+                          <Link href={`/events/${event.id}`} className="hover:text-blue-600 transition-colors">
+                            {event.probable_cause}
+                          </Link>
                         </td>
 
-                        <td className="py-3.5 px-4 text-slate-300 font-medium">
+                        <td className="py-3.5 px-4 text-slate-700 font-medium">
                           {event.primary_display_name || event.primary_process || "Not established"}
-                          {event.primary_pid ? <span className="ml-1 text-slate-500">PID {event.primary_pid}</span> : null}
+                          {event.primary_pid ? <span className="ml-1 text-slate-400">PID {event.primary_pid}</span> : null}
                         </td>
 
-                        <td className="py-3.5 px-4 text-slate-400">
+                        <td className="py-3.5 px-4 text-slate-500">
                           {formatDuration(event.start_time, event.end_time)}
                         </td>
 
-                        <td className="py-3.5 px-4 text-slate-400 whitespace-nowrap">
+                        <td className="py-3.5 px-4 text-slate-500 whitespace-nowrap">
                           {formatDateTime(event.start_time)}
                         </td>
 
                         <td className="py-3.5 px-4">
                           <span
-                            className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-semibold ${
+                            className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold border ${
                               isActive
-                                ? "bg-sky-500/10 text-sky-300 border border-sky-500/20"
-                                : "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                                ? "bg-blue-50 text-blue-700 border-blue-200"
+                                : "bg-emerald-50 text-emerald-700 border-emerald-200"
                             }`}
                           >
                             <span
                               className={`w-1.5 h-1.5 rounded-full ${
-                                isActive ? "bg-sky-400" : "bg-emerald-400"
+                                isActive ? "bg-blue-600 animate-pulse" : "bg-emerald-600"
                               }`}
                             />
                             {isActivityEvent ? "Recorded" : isActive ? "Active" : "Resolved"}
@@ -194,21 +188,12 @@ export default function EventsPage() {
                         </td>
 
                         <td className="py-3.5 px-4 text-right">
-                          {isActivityEvent ? (
-                            <Link
-                              href={`/events/${event.id}`}
-                              className="p-1 rounded text-slate-500 hover:text-sky-400 inline-flex items-center gap-1 text-xs"
-                            >
-                              Inspect <ChevronRight className="w-3.5 h-3.5" />
-                            </Link>
-                          ) : (
-                            <Link
-                              href={`/events/${event.id}`}
-                              className="p-1 rounded text-slate-500 hover:text-sky-400 inline-flex items-center gap-1 text-xs"
-                            >
-                              Inspect <ChevronRight className="w-3.5 h-3.5" />
-                            </Link>
-                          )}
+                          <Link
+                            href={`/events/${event.id}`}
+                            className="p-1 rounded text-slate-400 hover:text-blue-600 inline-flex items-center gap-1 text-xs font-semibold group-hover:translate-x-0.5 transition"
+                          >
+                            Inspect <ChevronRight className="w-3.5 h-3.5" />
+                          </Link>
                         </td>
                       </tr>
                     );

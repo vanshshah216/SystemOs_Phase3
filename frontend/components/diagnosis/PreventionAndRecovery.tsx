@@ -55,20 +55,20 @@ export default function PreventionAndRecovery({ event }: PreventionAndRecoveryPr
   // Recovery evaluation comparing current to baseline
   const diffFromBaseline = baseVal === null ? null : currentVal - baseVal;
   let recoveryStatus: "Improving" | "Recovered" | "Still Elevated" | "Unresolved" = "Unresolved";
-  let recoveryBadge = "bg-amber-500/10 text-amber-400 border-amber-500/30";
+  let recoveryBadge = "bg-amber-50 text-amber-700 border-amber-200";
 
   if (baseVal === null) {
     recoveryStatus = event?.status === "resolved" ? "Recovered" : "Unresolved";
-    recoveryBadge = "bg-slate-500/10 text-slate-400 border-slate-500/30";
+    recoveryBadge = "bg-slate-50 text-slate-600 border-slate-200";
   } else if (currentVal <= baseVal + (isDisk || isNet ? 5 : 3.5)) {
     recoveryStatus = "Recovered";
-    recoveryBadge = "bg-emerald-500/10 text-emerald-400 border-emerald-500/30";
+    recoveryBadge = "bg-emerald-50 text-emerald-700 border-emerald-200";
   } else if (diffFromBaseline !== null && diffFromBaseline < (isDisk || isNet ? 20 : 15)) {
     recoveryStatus = "Improving";
-    recoveryBadge = "bg-sky-500/10 text-sky-400 border-sky-500/30";
+    recoveryBadge = "bg-blue-50 text-blue-700 border-blue-200";
   } else {
     recoveryStatus = "Still Elevated";
-    recoveryBadge = "bg-rose-500/10 text-rose-400 border-rose-500/30";
+    recoveryBadge = "bg-rose-50 text-rose-700 border-rose-200";
   }
 
   if (!event) return null;
@@ -79,18 +79,20 @@ export default function PreventionAndRecovery({ event }: PreventionAndRecoveryPr
     const durationSeconds = typeof raw.observation_seconds === "number" ? raw.observation_seconds : null;
 
     return (
-      <div className="bg-[#151b23] border border-[#29323d] rounded-xl p-6 sm:p-7 space-y-3">
-        <div className="flex items-center gap-2 text-slate-200">
-          <Info className="w-4 h-4 text-sky-400" />
-          <h3 className="font-semibold">Memory increase observed</h3>
+      <div className="bg-white/90 border border-slate-200/80 rounded-2xl p-6 sm:p-7 space-y-3 shadow-sm shadow-slate-200/50 backdrop-blur-xl">
+        <div className="flex items-center gap-2 text-slate-900">
+          <div className="w-7 h-7 rounded-lg bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600">
+            <Info className="w-4 h-4" />
+          </div>
+          <h3 className="font-semibold text-base">Memory increase observed</h3>
         </div>
-        <p className="text-sm text-slate-300">
+        <p className="text-sm text-slate-600 leading-relaxed">
           {event.primary_display_name || event.primary_process || "A process"} used more resident memory over time.
           This trend alone does not show a memory leak, a performance problem, or that the app should be closed.
           Applications can use additional memory during normal work or while caching data.
         </p>
         {(growthMb !== null || durationSeconds !== null) && (
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-slate-500 font-mono">
             {growthMb !== null ? `${growthMb.toFixed(0)} MB measured increase` : ""}
             {growthMb !== null && durationSeconds !== null ? " over " : ""}
             {durationSeconds !== null ? `${(durationSeconds / 60).toFixed(0)} minutes` : ""}
@@ -101,19 +103,19 @@ export default function PreventionAndRecovery({ event }: PreventionAndRecoveryPr
   }
 
   return (
-    <div className="bg-[#151b23] border border-[#29323d] rounded-xl p-6 sm:p-7 space-y-6">
+    <div className="bg-white/90 border border-slate-200/80 rounded-2xl p-6 sm:p-7 space-y-6 shadow-sm shadow-slate-200/50 backdrop-blur-xl">
       {/* Section Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#29323d]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
         <div>
-          <span className="text-xs font-mono font-semibold uppercase tracking-wider text-sky-400">
+          <span className="text-xs font-mono font-bold uppercase tracking-wider text-blue-600">
             SYSTEM REMEDIATION & RECOVERY
           </span>
-          <h3 className="text-lg font-bold text-slate-100 font-sans mt-0.5">
+          <h3 className="text-lg font-bold text-[#172033] font-sans mt-0.5">
             RECOMMENDED PREVENTION / ACTION
           </h3>
         </div>
 
-        <span className="text-xs font-mono text-slate-400 bg-[#11171f] border border-[#232d38] px-3 py-1 rounded-md self-start sm:self-center">
+        <span className="text-xs font-mono text-slate-600 bg-slate-50 border border-slate-200 px-3 py-1 rounded-lg self-start sm:self-center font-semibold">
           Target: {event.probable_cause}
         </span>
       </div>
@@ -122,31 +124,31 @@ export default function PreventionAndRecovery({ event }: PreventionAndRecoveryPr
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <h4 className="text-xs font-mono font-semibold uppercase tracking-wider text-slate-300">
+            <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-700">
               Prescriptive Guidance (Recommendation-First)
             </h4>
-            <span className="text-[10px] font-mono text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
+            <span className="text-[10px] font-mono text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200 font-semibold">
               Non-Destructive
             </span>
           </div>
 
-          <ul className="space-y-2 text-xs font-mono text-slate-200">
+          <ul className="space-y-2 text-xs font-mono text-slate-700">
             {isCpu && (
               <>
-                <li className="flex items-start gap-2.5 p-3 rounded-lg bg-[#11171f] border border-[#232d38]">
-                  <CheckCircle2 className="w-4 h-4 text-sky-400 shrink-0 mt-0.5" />
+                <li className="flex items-start gap-2.5 p-3 rounded-xl bg-slate-50/70 border border-slate-200/60 shadow-xs">
+                  <CheckCircle2 className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
                   <span>Review the top CPU-consuming processes in the Attribution view.</span>
                 </li>
-                <li className="flex items-start gap-2.5 p-3 rounded-lg bg-[#11171f] border border-[#232d38]">
-                  <CheckCircle2 className="w-4 h-4 text-sky-400 shrink-0 mt-0.5" />
+                <li className="flex items-start gap-2.5 p-3 rounded-xl bg-slate-50/70 border border-slate-200/60 shadow-xs">
+                  <CheckCircle2 className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
                   <span>Consider closing or pausing a non-essential background application.</span>
                 </li>
-                <li className="flex items-start gap-2.5 p-3 rounded-lg bg-[#11171f] border border-[#232d38]">
-                  <CheckCircle2 className="w-4 h-4 text-sky-400 shrink-0 mt-0.5" />
+                <li className="flex items-start gap-2.5 p-3 rounded-xl bg-slate-50/70 border border-slate-200/60 shadow-xs">
+                  <CheckCircle2 className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
                   <span>Consider postponing CPU-heavy batch workloads until utilization normalizes.</span>
                 </li>
-                <li className="flex items-start gap-2.5 p-3 rounded-lg bg-[#11171f] border border-[#232d38]">
-                  <CheckCircle2 className="w-4 h-4 text-sky-400 shrink-0 mt-0.5" />
+                <li className="flex items-start gap-2.5 p-3 rounded-xl bg-slate-50/70 border border-slate-200/60 shadow-xs">
+                  <CheckCircle2 className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
                   <span>Continue monitoring telemetry after the manual intervention.</span>
                 </li>
               </>
@@ -154,27 +156,27 @@ export default function PreventionAndRecovery({ event }: PreventionAndRecoveryPr
 
             {isMem && !isGrowth && (
               <>
-                <li className="flex items-start gap-2.5 p-3 rounded-lg bg-[#11171f] border border-[#232d38]">
-                  <CheckCircle2 className="w-4 h-4 text-sky-400 shrink-0 mt-0.5" />
+                <li className="flex items-start gap-2.5 p-3 rounded-xl bg-slate-50/70 border border-slate-200/60 shadow-xs">
+                  <CheckCircle2 className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
                   <span>Review memory-heavy applications ({event.primary_display_name || event.primary_process || "primary observed contributor"}).</span>
                 </li>
-                <li className="flex items-start gap-2.5 p-3 rounded-lg bg-[#11171f] border border-[#232d38]">
-                  <CheckCircle2 className="w-4 h-4 text-sky-400 shrink-0 mt-0.5" />
+                <li className="flex items-start gap-2.5 p-3 rounded-xl bg-slate-50/70 border border-slate-200/60 shadow-xs">
+                  <CheckCircle2 className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
                   <span>Close unused application windows or browser tabs if appropriate.</span>
                 </li>
-                <li className="flex items-start gap-2.5 p-3 rounded-lg bg-[#11171f] border border-[#232d38]">
-                  <CheckCircle2 className="w-4 h-4 text-sky-400 shrink-0 mt-0.5" />
+                <li className="flex items-start gap-2.5 p-3 rounded-xl bg-slate-50/70 border border-slate-200/60 shadow-xs">
+                  <CheckCircle2 className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
                   <span>Reduce active concurrent workload if possible to alleviate memory and swap contention.</span>
                 </li>
-                <li className="flex items-start gap-2.5 p-3 rounded-lg bg-[#11171f] border border-[#232d38]">
-                  <CheckCircle2 className="w-4 h-4 text-sky-400 shrink-0 mt-0.5" />
+                <li className="flex items-start gap-2.5 p-3 rounded-xl bg-slate-50/70 border border-slate-200/60 shadow-xs">
+                  <CheckCircle2 className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
                   <span>
                     {baseVal !== null
                       ? `Continue monitoring whether RAM usage returns toward the measured baseline (${baseVal.toFixed(1)}%).`
                       : "Continue monitoring; a historical RAM baseline is not available yet."}
                   </span>
                 </li>
-                <div className="p-2.5 rounded bg-amber-500/10 border border-amber-500/30 text-[11px] font-mono text-amber-300">
+                <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs font-mono text-amber-800">
                   Notice: This system does not automatically terminate applications.
                 </div>
               </>
@@ -182,23 +184,23 @@ export default function PreventionAndRecovery({ event }: PreventionAndRecoveryPr
 
             {isDisk && (
               <>
-                <li className="flex items-start gap-2.5 p-3 rounded-lg bg-[#11171f] border border-[#232d38]">
-                  <CheckCircle2 className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                <li className="flex items-start gap-2.5 p-3 rounded-xl bg-slate-50/70 border border-slate-200/60 shadow-xs">
+                  <CheckCircle2 className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
                   <span>Identify the process generating heavy I/O ({event.primary_display_name || event.primary_process || "Storage Worker"}).</span>
                 </li>
-                <li className="flex items-start gap-2.5 p-3 rounded-lg bg-[#11171f] border border-[#232d38]">
-                  <CheckCircle2 className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                <li className="flex items-start gap-2.5 p-3 rounded-xl bg-slate-50/70 border border-slate-200/60 shadow-xs">
+                  <CheckCircle2 className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
                   <span>Allow expected backup, system update, or file-transfer operations to complete.</span>
                 </li>
-                <li className="flex items-start gap-2.5 p-3 rounded-lg bg-[#11171f] border border-[#232d38]">
-                  <CheckCircle2 className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                <li className="flex items-start gap-2.5 p-3 rounded-xl bg-slate-50/70 border border-slate-200/60 shadow-xs">
+                  <CheckCircle2 className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
                   <span>Consider pausing non-essential disk-heavy activity (indexing, large archive extraction).</span>
                 </li>
-                <li className="flex items-start gap-2.5 p-3 rounded-lg bg-[#11171f] border border-[#232d38]">
-                  <CheckCircle2 className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                <li className="flex items-start gap-2.5 p-3 rounded-xl bg-slate-50/70 border border-slate-200/60 shadow-xs">
+                  <CheckCircle2 className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
                   <span>Continue monitoring after intervention to verify queue normalization.</span>
                 </li>
-                <div className="p-2.5 rounded bg-slate-800/80 border border-slate-700 text-[11px] font-mono text-slate-400">
+                <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs font-mono text-slate-600">
                   Notice: Do NOT terminate essential system storage services or flush operational databases.
                 </div>
               </>
@@ -206,70 +208,69 @@ export default function PreventionAndRecovery({ event }: PreventionAndRecoveryPr
 
             {isNet && (
               <>
-                <li className="flex items-start gap-2.5 p-3 rounded-lg bg-[#11171f] border border-[#232d38]">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                <li className="flex items-start gap-2.5 p-3 rounded-xl bg-slate-50/70 border border-slate-200/60 shadow-xs">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
                   <span>Review active downloads, uploads, and peer network socket streams.</span>
                 </li>
-                <li className="flex items-start gap-2.5 p-3 rounded-lg bg-[#11171f] border border-[#232d38]">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                <li className="flex items-start gap-2.5 p-3 rounded-xl bg-slate-50/70 border border-slate-200/60 shadow-xs">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
                   <span>Check background cloud synchronization utilities and package managers.</span>
                 </li>
-                <li className="flex items-start gap-2.5 p-3 rounded-lg bg-[#11171f] border border-[#232d38]">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                <li className="flex items-start gap-2.5 p-3 rounded-xl bg-slate-50/70 border border-slate-200/60 shadow-xs">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
                   <span>Pause non-essential file transfers if network contention degrades critical latency.</span>
                 </li>
-                <li className="flex items-start gap-2.5 p-3 rounded-lg bg-[#11171f] border border-[#232d38]">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                <li className="flex items-start gap-2.5 p-3 rounded-xl bg-slate-50/70 border border-slate-200/60 shadow-xs">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
                   <span>Continue monitoring after intervention until throughput settles.</span>
                 </li>
               </>
             )}
-
           </ul>
         </div>
 
-        {/* SECTION 8: MONITOR RECOVERY PANEL */}
+        {/* MONITOR RECOVERY PANEL */}
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <h4 className="text-xs font-mono font-semibold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
-              <RefreshCw className="w-3.5 h-3.5 text-sky-400 animate-spin" />
+            <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+              <RefreshCw className="w-3.5 h-3.5 text-blue-600 animate-spin" />
               Monitoring recovery...
             </h4>
-            <span className={`text-xs font-mono font-bold px-2.5 py-0.5 rounded border ${recoveryBadge}`}>
+            <span className={`text-xs font-mono font-bold px-2.5 py-0.5 rounded-full border ${recoveryBadge}`}>
               Status: {recoveryStatus}
             </span>
           </div>
 
-          <div className="p-4 rounded-lg bg-[#11171f] border border-[#232d38] space-y-4 font-mono text-xs">
+          <div className="p-5 rounded-xl bg-slate-50/80 border border-slate-200/60 space-y-4 font-mono text-xs shadow-xs">
             <div className="flex items-center justify-between">
-              <span className="text-slate-400">Tracked Metric</span>
-              <span className="text-slate-200 font-bold">{metricLabel}</span>
+              <span className="text-slate-500 font-medium">Tracked Metric</span>
+              <span className="text-slate-900 font-bold">{metricLabel}</span>
             </div>
 
             <div className="flex items-center justify-between">
-              <span className="text-slate-400">Observed Value</span>
-              <span className="text-base font-bold text-slate-100">
+              <span className="text-slate-500 font-medium">Observed Value</span>
+              <span className="text-base font-bold text-slate-900">
                 {currentVal.toFixed(1)} {unit}
               </span>
             </div>
 
             <div className="flex items-center justify-between">
-              <span className="text-slate-400">Baseline Target</span>
-              <span className="text-slate-300">
+              <span className="text-slate-500 font-medium">Baseline Target</span>
+              <span className="text-slate-700 font-semibold">
                 {baseVal !== null ? `${baseVal.toFixed(1)} ${unit}` : "Not available"}
               </span>
             </div>
 
             {/* Progress Bar */}
             <div className="pt-1 space-y-1.5">
-              <div className="w-full h-2 rounded-full bg-slate-800 overflow-hidden">
+              <div className="w-full h-2 rounded-full bg-slate-200 overflow-hidden">
                 {baseVal !== null && (
                   <div
                     className={`h-full rounded-full transition-all duration-500 ${
                       recoveryStatus === "Recovered"
                         ? "bg-emerald-500"
                         : recoveryStatus === "Improving"
-                        ? "bg-sky-400"
+                        ? "bg-blue-500"
                         : "bg-rose-500"
                     }`}
                     style={{ width: `${Math.max(15, Math.min(100, 100 - ((diffFromBaseline ?? 0) / (baseVal || 1)) * 50))}%` }}
@@ -281,11 +282,11 @@ export default function PreventionAndRecovery({ event }: PreventionAndRecoveryPr
         </div>
       </div>
 
-      {/* SECTION 9: SAFETY NOTICE BANNER */}
-      <div className="p-4 rounded-lg bg-sky-500/5 border border-sky-500/20 flex items-start gap-3 text-xs font-sans text-slate-300">
-        <Info className="w-4 h-4 text-sky-400 shrink-0 mt-0.5" />
+      {/* SAFETY NOTICE BANNER */}
+      <div className="p-4 rounded-xl bg-blue-50/80 border border-blue-200/80 flex items-start gap-3 text-xs font-sans text-slate-700">
+        <Info className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
         <div>
-          <span className="font-semibold text-sky-400 block mb-0.5 font-mono uppercase tracking-wider text-[11px]">
+          <span className="font-bold text-blue-700 block mb-0.5 font-mono uppercase tracking-wider text-[11px]">
             Safety Guarantee & Recommendation-First Policy
           </span>
           SYSTEMOS provides recommendations based on observed telemetry. It does not automatically terminate arbitrary processes or system services.

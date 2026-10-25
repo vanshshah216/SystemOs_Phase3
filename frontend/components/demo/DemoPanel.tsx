@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { Play, Square, Loader2, Zap, MemoryStick, HardDrive, Network, CheckCircle2, Circle, ArrowRight, ShieldCheck, Clock, Terminal } from "lucide-react";
+import { Play, Square, Loader2, Zap, MemoryStick, HardDrive, Network, CheckCircle2, Circle, ShieldCheck, Terminal } from "lucide-react";
 import { api } from "@/lib/api";
 
 const SCENARIOS = [
@@ -131,17 +131,17 @@ export default function DemoPanel() {
   ];
 
   return (
-    <div className="bg-[#151b23] border border-[#29323d] rounded-xl p-6 sm:p-7 space-y-6">
+    <div className="bg-white/90 border border-slate-200/80 rounded-2xl p-6 sm:p-7 space-y-6 shadow-sm shadow-slate-200/50 backdrop-blur-xl">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#29323d]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
         <div>
-          <span className="text-xs font-mono font-semibold uppercase tracking-wider text-sky-400">
+          <span className="text-xs font-mono font-bold uppercase tracking-wider text-blue-600">
             SIMULATION CONTROLS
           </span>
-          <h3 className="text-lg font-bold text-slate-100 font-sans mt-0.5">
+          <h3 className="text-lg font-bold text-[#172033] font-sans mt-0.5">
             Synthetic Anomaly Simulator
           </h3>
-          <p className="text-xs text-slate-400 font-sans mt-0.5">
+          <p className="text-xs text-slate-500 font-sans mt-0.5">
             Inject synthetic load vectors into the live mathematical pipeline without restarting servers.
           </p>
         </div>
@@ -150,7 +150,7 @@ export default function DemoPanel() {
           <button
             onClick={stopScenario}
             disabled={loading === "stop"}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 text-xs font-mono font-semibold transition-colors shrink-0 self-start sm:self-center"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-mono font-semibold transition-colors shrink-0 self-start sm:self-center"
           >
             {loading === "stop" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Square className="w-3.5 h-3.5 fill-current" />}
             STOP SIMULATION
@@ -170,23 +170,23 @@ export default function DemoPanel() {
               key={sc.id}
               onClick={() => startScenario(sc.id)}
               disabled={isSimulating || !!loading}
-              className={`p-4 rounded-lg border text-left transition-all ${
+              className={`p-4 rounded-xl border text-left transition-all duration-200 ${
                 isActive
-                  ? "bg-sky-500/10 border-sky-500/40 text-sky-300 shadow-sm"
-                  : "bg-[#11171f] border-[#232d38] hover:border-slate-700 text-slate-300 hover:text-white disabled:opacity-40 disabled:hover:border-[#232d38]"
+                  ? "bg-blue-50/90 border-blue-400 text-blue-900 shadow-sm ring-1 ring-blue-300"
+                  : "bg-slate-50/80 border-slate-200/70 hover:border-blue-300 hover:bg-blue-50/40 text-slate-700 hover:text-slate-900 hover:scale-[1.01] disabled:opacity-40 disabled:hover:scale-100 disabled:hover:border-slate-200"
               }`}
             >
-              <div className="flex items-center gap-2 mb-1.5">
+              <div className="flex items-center gap-2 mb-2">
                 {isLoading ? (
-                  <Loader2 className="w-4 h-4 animate-spin text-sky-400" />
+                  <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
                 ) : (
-                  <Icon className={`w-4 h-4 ${isActive ? "text-sky-400" : "text-slate-400"}`} />
+                  <Icon className={`w-4 h-4 ${isActive ? "text-blue-600" : "text-slate-600"}`} />
                 )}
                 <span className="text-xs font-mono font-bold tracking-tight">
                   {sc.label}
                 </span>
               </div>
-              <p className="text-[11px] text-slate-400 font-sans leading-relaxed">
+              <p className="text-[11px] text-slate-500 font-sans leading-relaxed">
                 {sc.desc}
               </p>
             </button>
@@ -194,18 +194,18 @@ export default function DemoPanel() {
         })}
       </div>
 
-      {/* SECTION 3: OBSERVABLE SIMULATION STATUS PANEL */}
+      {/* OBSERVABLE SIMULATION STATUS PANEL */}
       <div className="space-y-3">
-        <h4 className="text-xs font-mono font-semibold uppercase tracking-wider text-slate-300">
+        <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-700">
           Observable Simulation Status Panel
         </h4>
 
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 bg-[#11171f] border border-[#232d38] rounded-lg p-4 font-mono text-xs">
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 bg-slate-50/80 border border-slate-200/60 rounded-xl p-4 font-mono text-xs shadow-xs">
           <div>
-            <span className="text-slate-500 text-[11px]">Current Mode</span>
+            <span className="text-slate-500 text-[11px] font-medium">Current Mode</span>
             <div className="text-sm font-bold mt-0.5">
-              <span className={`inline-block px-2 py-0.5 rounded text-[10px] ${
-                isSimulating ? "bg-amber-500/10 text-amber-400 border border-amber-500/20" : "bg-slate-800 text-slate-300"
+              <span className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-semibold border ${
+                isSimulating ? "bg-amber-50 text-amber-700 border-amber-200" : "bg-slate-100 text-slate-700 border-slate-200"
               }`}>
                 {statusData.current_mode || (isSimulating ? "Simulation" : "Normal")}
               </span>
@@ -213,37 +213,37 @@ export default function DemoPanel() {
           </div>
 
           <div>
-            <span className="text-slate-500 text-[11px]">Scenario</span>
-            <div className="text-sm font-semibold text-slate-200 mt-0.5 truncate">
+            <span className="text-slate-500 text-[11px] font-medium">Scenario</span>
+            <div className="text-sm font-bold text-slate-900 mt-0.5 truncate">
               {statusData.active_scenario ? statusData.active_scenario.replace("_", " ").toUpperCase() : "None"}
             </div>
           </div>
 
           <div>
-            <span className="text-slate-500 text-[11px]">Samples Injected</span>
-            <div className="text-sm font-bold text-sky-400 mt-0.5">
+            <span className="text-slate-500 text-[11px] font-medium">Samples Injected</span>
+            <div className="text-sm font-bold text-blue-600 mt-0.5">
               {statusData.samples_injected || 0}
             </div>
           </div>
 
           <div>
-            <span className="text-slate-500 text-[11px]">Current Stage</span>
-            <div className="text-sm font-semibold text-slate-200 mt-0.5 truncate">
+            <span className="text-slate-500 text-[11px] font-medium">Current Stage</span>
+            <div className="text-sm font-bold text-slate-900 mt-0.5 truncate">
               {statusData.current_stage || "Idle"}
             </div>
           </div>
 
           <div>
-            <span className="text-slate-500 text-[11px]">Detection Status</span>
+            <span className="text-slate-500 text-[11px] font-medium">Detection Status</span>
             <div className="mt-0.5">
-              <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold border ${
+              <span className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
                 statusData.detection_status === "Diagnosis Generated"
-                  ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
+                  ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                   : statusData.detection_status === "Sustained Anomaly"
-                  ? "bg-rose-500/10 text-rose-400 border-rose-500/30"
+                  ? "bg-rose-50 text-rose-700 border-rose-200"
                   : statusData.detection_status === "Potential Anomaly"
-                  ? "bg-amber-500/10 text-amber-400 border-amber-500/30"
-                  : "bg-slate-800 text-slate-400 border-slate-700"
+                  ? "bg-amber-50 text-amber-700 border-amber-200"
+                  : "bg-slate-100 text-slate-600 border-slate-200"
               }`}>
                 {statusData.detection_status || "Not Detected"}
               </span>
@@ -252,9 +252,9 @@ export default function DemoPanel() {
         </div>
       </div>
 
-      {/* SECTION 4: SIMULATION TIMELINE PROGRESSION */}
+      {/* SIMULATION TIMELINE PROGRESSION */}
       <div className="space-y-3">
-        <h4 className="text-xs font-mono font-semibold uppercase tracking-wider text-slate-300">
+        <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-700">
           Simulation Pipeline Timeline
         </h4>
 
@@ -262,24 +262,24 @@ export default function DemoPanel() {
           {timelineStages.map((st, i) => (
             <div
               key={i}
-              className={`p-3 rounded-lg border transition-all ${
+              className={`p-3 rounded-xl border transition-all duration-200 ${
                 st.done
-                  ? "bg-[#11171f] border-emerald-500/30 text-slate-200"
-                  : "bg-[#090e18] border-[#232d38] text-slate-500"
+                  ? "bg-emerald-50/70 border-emerald-200/80 text-slate-900 shadow-xs"
+                  : "bg-slate-50/50 border-slate-200/60 text-slate-400"
               }`}
             >
               <div className="flex items-center gap-1.5 mb-1 text-[10px]">
                 {st.done ? (
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
                 ) : (
-                  <Circle className="w-3.5 h-3.5 text-slate-600 shrink-0" />
+                  <Circle className="w-3.5 h-3.5 text-slate-300 shrink-0" />
                 )}
-                <span className={st.done ? "text-emerald-400 font-bold" : "text-slate-500 font-medium"}>
+                <span className={st.done ? "text-emerald-700 font-bold" : "text-slate-400 font-medium"}>
                   STEP {i + 1}
                 </span>
               </div>
               <div className="font-bold text-[11px] truncate">{st.label}</div>
-              <div className="text-[10px] text-slate-400 font-sans mt-0.5 leading-tight">
+              <div className="text-[10px] text-slate-500 font-sans mt-0.5 leading-tight">
                 {st.desc}
               </div>
             </div>
@@ -287,94 +287,96 @@ export default function DemoPanel() {
         </div>
       </div>
 
-      {/* SECTION 10: VERIFICATION CHECKLIST & TRANSPARENCY */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-2 border-t border-[#29323d]">
+      {/* VERIFICATION CHECKLIST & TRANSPARENCY */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-2 border-t border-slate-100">
         {/* Verification Checklist */}
-        <div className="p-4 rounded-lg bg-[#11171f] border border-[#232d38] space-y-2.5 font-mono text-xs">
-          <div className="text-xs font-bold text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
-            <ShieldCheck className="w-4 h-4 text-sky-400" />
+        <div className="p-5 rounded-xl bg-slate-50/80 border border-slate-200/60 space-y-2.5 font-mono text-xs shadow-xs">
+          <div className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+            <ShieldCheck className="w-4 h-4 text-blue-600" />
             Mathematical Pipeline Verification Checklist
           </div>
-          <ul className="space-y-1.5 text-[11px] text-slate-300">
+          <ul className="space-y-1.5 text-[11px] text-slate-700">
             <li className="flex items-center gap-2">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
               <span>[✓] Synthetic telemetry generated & injected</span>
             </li>
             <li className="flex items-center gap-2">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
               <span>[✓] Ingested into SQLite system_metric table</span>
             </li>
             <li className="flex items-center gap-2">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
               <span>[✓] Statistical engine computes mean, std dev, Z-score, P95</span>
             </li>
             <li className="flex items-center gap-2">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
               <span>[✓] Persistence state machine verifies N=4 consecutive anomalies</span>
             </li>
             <li className="flex items-center gap-2">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
               <span>[✓] Deterministic diagnosis rule evaluates candidate</span>
             </li>
             <li className="flex items-center gap-2">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
               <span>[✓] Event recorded into diagnosis_event & simulation_run tables</span>
             </li>
             <li className="flex items-center gap-2">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
               <span>[✓] Frontend dashboard receives live update via polling API</span>
             </li>
           </ul>
         </div>
 
         {/* Process Attribution Transparency Note */}
-        <div className="p-4 rounded-lg bg-[#11171f] border border-[#232d38] space-y-2 text-xs font-sans text-slate-400 flex flex-col justify-between">
+        <div className="p-5 rounded-xl bg-slate-50/80 border border-slate-200/60 space-y-2 text-xs font-sans text-slate-600 flex flex-col justify-between shadow-xs">
           <div>
-            <div className="text-xs font-mono font-bold text-slate-200 uppercase tracking-wider mb-1 flex items-center gap-1.5">
-              <Terminal className="w-4 h-4 text-amber-400" />
+            <div className="text-xs font-mono font-bold text-slate-800 uppercase tracking-wider mb-1 flex items-center gap-1.5">
+              <Terminal className="w-4 h-4 text-amber-600" />
               Attribution Transparency Notice
             </div>
             <p className="leading-relaxed">
-              In Simulation Mode, synthetic system-level load is attributed to synthetic mock processes (designated as <code className="text-amber-300 font-mono">[Simulated]</code>). The system strictly avoids fabricating blame against real host OS processes without telemetry evidence.
+              In Simulation Mode, synthetic system-level load is attributed to synthetic mock processes (designated as <code className="text-amber-800 bg-amber-50 px-1 py-0.5 rounded font-mono font-semibold">[Simulated]</code>). The system strictly avoids fabricating blame against real host OS processes without telemetry evidence.
             </p>
           </div>
 
-          <div className="pt-2 border-t border-[#29323d] text-[11px] font-mono text-slate-500">
+          <div className="pt-3 border-t border-slate-200/60 text-[11px] font-mono text-slate-500">
             Safety Guarantee: Recommendation-first system; zero automated termination routines.
           </div>
         </div>
       </div>
 
-      {/* SECTION 11: RECENT SIMULATION AUDIT RUNS */}
+      {/* RECENT SIMULATION AUDIT RUNS */}
       {simRuns.length > 0 && (
-        <div className="space-y-3 pt-2 border-t border-[#29323d]">
-          <h4 className="text-xs font-mono font-semibold uppercase tracking-wider text-slate-300">
+        <div className="space-y-3 pt-2 border-t border-slate-100">
+          <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-700">
             Simulation Audit Run Log (SQLite simulation_run)
           </h4>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs font-mono">
+          <div className="overflow-x-auto rounded-xl border border-slate-200/80">
+            <table className="w-full text-xs font-mono bg-white">
               <thead>
-                <tr className="border-b border-[#29323d] text-slate-400">
-                  <th className="text-left py-2 px-3">Run ID</th>
-                  <th className="text-left py-2 px-3">Scenario</th>
-                  <th className="text-left py-2 px-3">Diagnosis Emitted</th>
-                  <th className="text-right py-2 px-3">Samples</th>
-                  <th className="text-left py-2 px-3">Detection Stage</th>
-                  <th className="text-right py-2 px-3">Status</th>
+                <tr className="border-b border-slate-200 bg-slate-50/80 text-slate-600">
+                  <th className="text-left py-2.5 px-3 font-semibold">Run ID</th>
+                  <th className="text-left py-2.5 px-3 font-semibold">Scenario</th>
+                  <th className="text-left py-2.5 px-3 font-semibold">Diagnosis Emitted</th>
+                  <th className="text-right py-2.5 px-3 font-semibold">Samples</th>
+                  <th className="text-left py-2.5 px-3 font-semibold">Detection Stage</th>
+                  <th className="text-right py-2.5 px-3 font-semibold">Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#29323d]/50">
+              <tbody className="divide-y divide-slate-100">
                 {simRuns.slice(0, 5).map((run, i) => (
-                  <tr key={i} className="hover:bg-slate-800/30">
-                    <td className="py-2.5 px-3 text-slate-400 truncate max-w-[130px]">{run.simulation_id}</td>
-                    <td className="py-2.5 px-3 font-semibold text-sky-400">{run.scenario}</td>
-                    <td className="py-2.5 px-3 text-slate-200">{run.diagnosis || "—"}</td>
-                    <td className="py-2.5 px-3 text-right text-slate-300 font-bold">{run.samples_generated}</td>
-                    <td className="py-2.5 px-3 text-slate-400">{run.detection_stage}</td>
+                  <tr key={i} className="hover:bg-blue-50/30 transition-colors">
+                    <td className="py-2.5 px-3 text-slate-500 truncate max-w-[130px]">{run.simulation_id}</td>
+                    <td className="py-2.5 px-3 font-semibold text-blue-600">{run.scenario}</td>
+                    <td className="py-2.5 px-3 text-slate-800 font-medium">{run.diagnosis || "—"}</td>
+                    <td className="py-2.5 px-3 text-right text-slate-900 font-bold">{run.samples_generated}</td>
+                    <td className="py-2.5 px-3 text-slate-600">{run.detection_stage}</td>
                     <td className="py-2.5 px-3 text-right">
-                      <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold ${
-                        run.status === "completed" ? "bg-emerald-500/10 text-emerald-400" : "bg-sky-500/10 text-sky-400"
+                      <span className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
+                        run.status === "completed"
+                          ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                          : "bg-blue-50 text-blue-700 border-blue-200"
                       }`}>
                         {run.status}
                       </span>

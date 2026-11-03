@@ -4,6 +4,7 @@ import TopBar from "@/components/layout/TopBar";
 import PreventionAndRecovery from "@/components/diagnosis/PreventionAndRecovery";
 import { useEvent } from "@/hooks/useEvents";
 import { formatDateTime, formatDuration, formatBytes } from "@/lib/utils";
+import { getProcessDisplayName, hideExecutableNames } from "@/lib/processNames";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -52,9 +53,17 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
   const persistenceRequired = typeof raw.persistence_required === "number" ? raw.persistence_required : null;
 
   if (isBrowserTabActivity) {
-    const title = typeof raw.tab_title === "string" ? raw.tab_title : event.probable_cause;
+    const title = hideExecutableNames(typeof raw.tab_title === "string" ? raw.tab_title : event.probable_cause);
     const browser = typeof raw.browser === "string" ? raw.browser : event.primary_display_name;
-    const action = typeof raw.activity === "string" ? raw.activity.replace(/_/g, " ") : "observed";
+    const activity = typeof raw.activity === "string" ? raw.activity : "observed";
+    const action = activity.replace(/_/g, " ");
+    const suggestion = activity === "opened"
+      ? "Opening a tab is normal activity and does not indicate a fault. If the page is stuck, reload it; check that any form or document work is saved before closing the tab."
+      : activity === "activated"
+      ? "Tab selection is normal activity. This event contains no signal that the page is unhealthy; if it is slow, reload it and check the browser's overall resource use."
+      : activity === "title_changed"
+      ? "A title change is normal page activity. If it was unexpected, verify the destination in the browser's address bar before interacting with the page."
+      : "This tab was already open when activity collection observed it. No fault is implied; reload it only if it is unresponsive and your work is saved.";
 
     return (
       <div className="flex-1 flex flex-col min-w-0 bg-[#FAFCFF]">
@@ -88,9 +97,24 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
               </div>
             </dl>
             <div className="rounded-xl border border-blue-200 bg-blue-50/60 p-4 text-sm text-slate-700 space-y-2 shadow-xs">
-              <p>This record comes from the optional SYSTEMOS browser extension. It stores the tab title and activity type only; it does not send the page URL or content.</p>
-              <p>CPU and memory are measured for the whole browser by Windows. The browser does not provide reliable per-tab resource figures to this monitor, so this page does not attribute browser resource use to this tab.</p>
+              <p>This record comes from the SYSTEMOS browser extension. The measured evidence is the browser, title, activity type, and timestamp. The extension does not send the page URL or content.</p>
+              <p><strong>Diagnosis: Tab health cannot be measured from this event.</strong> Windows reports CPU and memory for the browser process as a whole; SYSTEMOS cannot attribute those measurements, page errors, or page contents to an individual tab.</p>
             </div>
+            <section className="rounded-xl border border-slate-200 bg-white p-5 space-y-3">
+              <div>
+                <div className="text-xs font-bold uppercase tracking-wide text-blue-700">Assessment & suggested actions</div>
+                <p className="mt-2 text-sm leading-relaxed text-slate-700">{suggestion}</p>
+              </div>
+              <div className="border-t border-slate-100 pt-3">
+                <p className="text-xs text-slate-500">For performance diagnosis, inspect the browser application as a whole. Its process CPU and memory do not represent this tab alone.</p>
+                <Link
+                  href="/processes"
+                  className="mt-3 inline-flex items-center gap-2 rounded-lg bg-blue-600 px-3.5 py-2 text-xs font-semibold text-white hover:bg-blue-700"
+                >
+                  Inspect browser processes <ArrowDown className="w-3.5 h-3.5 -rotate-90" />
+                </Link>
+              </div>
+            </section>
           </section>
         </main>
       </div>
@@ -126,7 +150,7 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
                 </span>
               </div>
               <h2 className="text-2xl sm:text-3xl font-bold text-[#172033] font-sans tracking-tight">
-                {event.probable_cause}
+                {hideExecutableNames(event.probable_cause)}
               </h2>
             </div>
 
@@ -155,14 +179,14 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
                 {isMemoryGrowthObservation ? "Application observed" : "Process association"}
               </div>
               <div className="text-slate-900 font-bold mt-0.5 truncate">
-                {event.primary_display_name || event.primary_process || "Not established"}
+                {getProcessDisplayName(event.primary_display_name, event.primary_process)}
                 {event.primary_pid ? ` · PID ${event.primary_pid}` : ""}
               </div>
             </div>
             <div>
               <div className="text-slate-500 text-[11px] uppercase font-medium">Telemetry Origin</div>
               <div className="text-blue-600 font-bold mt-0.5">
-                {event.is_demo ? "Synthetic Inject" : "Deterministic psutil"}
+                Live Windows telemetry
               </div>
             </div>
           </div>
@@ -251,7 +275,7 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
             <div className="flex-1 w-full p-4 rounded-xl bg-slate-50/80 border border-slate-200/70 text-center shadow-xs">
               <span className="text-[10px] text-blue-600 font-bold block mb-1">Step 4</span>
               <div className="font-bold text-slate-900">{isMemoryGrowthObservation ? "Observed process" : "Process Association"}</div>
-              <div className="text-[11px] text-slate-500 mt-1 truncate">{event.primary_display_name || event.primary_process || "Process cause not established"}</div>
+              <div className="text-[11px] text-slate-500 mt-1 truncate">{getProcessDisplayName(event.primary_display_name, event.primary_process)}</div>
             </div>
 
             <ArrowDown className="w-4 h-4 text-slate-400 md:-rotate-90 shrink-0" />
@@ -276,7 +300,7 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
               {items.map((item: string, i: number) => (
                 <div key={i} className="flex items-start gap-3 p-3.5 rounded-xl bg-slate-50/80 border border-slate-200/70 text-xs font-mono text-slate-800 shadow-xs">
                   <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                  <span className="leading-relaxed">{item}</span>
+                  <span className="leading-relaxed">{hideExecutableNames(item)}</span>
                 </div>
               ))}
             </div>

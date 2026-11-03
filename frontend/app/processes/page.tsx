@@ -4,6 +4,7 @@ import TopBar from "@/components/layout/TopBar";
 import { useProcessAnalyzer } from "@/hooks/useProcesses";
 import { useApplications } from "@/hooks/useApplications";
 import { formatPct } from "@/lib/utils";
+import { getProcessDisplayName, hideExecutableNames } from "@/lib/processNames";
 import Link from "next/link";
 import PipelineHealthSection from "@/components/health/PipelineHealthSection";
 import {
@@ -44,6 +45,13 @@ function formatDuration(seconds: number): string {
   const hours = Math.floor(mins / 60);
   const remMins = mins % 60;
   return `${hours}h ${remMins}m`;
+}
+
+function formatMemory(bytes: number): string {
+  const megabytes = bytes / (1024 * 1024);
+  return megabytes >= 1024
+    ? `${(megabytes / 1024).toFixed(2)} GB`
+    : `${megabytes.toFixed(1)} MB`;
 }
 
 function getClassBadge(activityClass: string) {
@@ -120,29 +128,48 @@ function getSafetyBadge(safetyTier: string) {
 
 function ApplicationRows({
   application,
-  expanded,
-  memoryMb,
-  onToggle,
 }: {
   application: ApplicationGroup;
-  expanded: boolean;
-  memoryMb: number;
-  onToggle: () => void;
 }) {
+  const primaryProcess = application.processes.reduce<ApplicationGroup["processes"][number] | null>(
+    (highestCpu, process) =>
+      highestCpu === null || process.cpu_percent > highestCpu.cpu_percent
+        ? process
+        : highestCpu,
+    null,
+  );
+
   return (
-    <>
-      <tr className="hover:bg-[#F8FAFC] transition-colors">
+    <tr className="hover:bg-[#F8FAFC] transition-colors">
         <td className="p-3.5">
-          <div className="font-bold text-[#172033]">{application.display_name}</div>
+          <div className="font-bold text-[#172033]">
+            {getProcessDisplayName(
+              application.display_name,
+              application.processes[0]?.process_name,
+            )}
+          </div>
           <div className="mt-1 text-[11px] text-[#667085]">
-            {application.is_fallback_label ? "Unidentified · " : ""}
             {application.role.replace(/_/g, " ")}
             {application.is_foreground ? " · foreground window" : " · running in background"}
           </div>
         </td>
-        <td className="p-3.5 text-right font-bold text-[#2563EB]">{application.cpu_percent.toFixed(1)}%</td>
-        <td className="p-3.5 text-right font-bold text-[#172033]">{memoryMb >= 1024 ? `${(memoryMb / 1024).toFixed(2)} GB` : `${memoryMb.toFixed(1)} MB`}</td>
-        <td className="p-3.5 text-right font-medium text-[#667085]">{application.memory_percent.toFixed(1)}%</td>
+        <td className="p-3.5 min-w-36">
+          <div className="flex items-center gap-2">
+            <div className="h-2 flex-1 overflow-hidden rounded-full bg-[#E5EAF1]" role="progressbar" aria-label={`${application.display_name} CPU usage`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.min(application.cpu_percent, 100)}>
+              <div className="h-full rounded-full bg-[#2563EB]" style={{ width: `${Math.min(application.cpu_percent, 100)}%` }} />
+            </div>
+            <span className="w-12 text-right font-bold tabular-nums text-[#2563EB]">{application.cpu_percent.toFixed(1)}%</span>
+          </div>
+        </td>
+        <td className="p-3.5 min-w-40">
+          <div className="font-bold tabular-nums text-[#172033]">{formatMemory(application.memory_bytes)}</div>
+          <div className="mt-1 flex items-center gap-2">
+            <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-[#E5EAF1]" role="progressbar" aria-label={`${application.display_name} physical memory usage`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.min(application.memory_percent, 100)}>
+              <div className="h-full rounded-full bg-[#7C3AED]" style={{ width: `${Math.min(application.memory_percent, 100)}%` }} />
+            </div>
+            <span className="w-12 text-right text-[10px] tabular-nums text-[#667085]">{application.memory_percent.toFixed(1)}%</span>
+          </div>
+        </td>
         <td className="p-3.5 text-right font-medium text-[#172033]">{application.process_count}</td>
         <td className="p-3.5">
           <span className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-semibold border ${
@@ -152,40 +179,19 @@ function ApplicationRows({
           </span>
         </td>
         <td className="p-3.5 text-center">
-          <button
-            type="button"
-            onClick={onToggle}
-            aria-expanded={expanded}
-            className="text-xs font-semibold text-[#2563EB] hover:text-[#1D4ED8] hover:underline"
-          >
-            {expanded ? "Hide" : "Inspect"}
-          </button>
+          {primaryProcess ? (
+            <Link
+              href={`/processes/${primaryProcess.pid}`}
+              className="text-xs font-semibold text-[#2563EB] hover:text-[#1D4ED8] hover:underline"
+              title="Inspect the process using the most CPU in this app group"
+            >
+              Inspect
+            </Link>
+          ) : (
+            <span className="text-xs text-[#98A2B3]">Unavailable</span>
+          )}
         </td>
       </tr>
-      {expanded && (
-        <tr>
-          <td colSpan={7} className="bg-[#F8FAFC] px-4 py-3.5 border-y border-[#E5EAF1]">
-            <div className="space-y-2">
-              {application.processes.map(process => (
-                <div key={process.pid} className="grid grid-cols-2 gap-2 rounded-xl bg-white border border-[#E5EAF1] p-3 text-[11px] sm:grid-cols-6 shadow-2xs">
-                  <Link href={`/processes/${process.pid}`} className="flex min-w-0 flex-col truncate text-[#2563EB] hover:underline font-semibold" title={process.process_name}>
-                    <span className="truncate">{process.display_name || process.process_name}</span>
-                    {process.display_name && process.display_name !== process.process_name && (
-                      <span className="truncate text-[10px] text-[#98A2B3] font-normal">{process.process_name}</span>
-                    )}
-                  </Link>
-                  <span className="text-[#667085] font-medium">PID {process.pid}</span>
-                  <span className="text-[#2563EB] font-bold">{process.cpu_percent.toFixed(1)}% CPU</span>
-                  <span className="text-[#172033] font-semibold">{(process.memory_bytes / (1024 * 1024)).toFixed(1)} MB RSS</span>
-                  <span className="text-[#667085]">{process.status ?? "Available"}</span>
-                  <span className="text-[#98A2B3]">{process.is_foreground ? "Foreground" : `Parent PID ${process.parent_pid ?? "—"}`}</span>
-                </div>
-              ))}
-            </div>
-          </td>
-        </tr>
-      )}
-    </>
   );
 }
 
@@ -194,7 +200,6 @@ export default function ProcessesPage() {
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState("cpu_percent");
   const [expandedRecId, setExpandedRecId] = useState<string | null>(null);
-  const [expandedApplicationId, setExpandedApplicationId] = useState<string | null>(null);
   const [applicationFilter, setApplicationFilter] = useState("all");
   const [applicationSearch, setApplicationSearch] = useState("");
   const [applicationSort, setApplicationSort] = useState("cpu_percent");
@@ -367,7 +372,7 @@ export default function ProcessesPage() {
               </div>
 
               <div className="text-right text-xs font-mono text-[#667085]">
-                Potential memory savings: <span className="font-bold text-[#16A34A]">{potentialReclaimableMb.toFixed(1)} MB</span>
+                Possible memory savings: <span className="font-bold text-[#16A34A]">{potentialReclaimableMb.toFixed(1)} MB</span>
               </div>
             </div>
 
@@ -400,10 +405,7 @@ export default function ProcessesPage() {
                           href={`/processes/${rec.pid}`}
                           className="font-mono font-bold text-[#172033] hover:text-[#2563EB] flex items-center gap-1.5 text-sm transition-colors"
                         >
-                          <span>{rec.display_name || rec.name}</span>
-                          {rec.display_name && rec.display_name !== rec.name && (
-                            <span className="ml-1 text-xs font-normal text-[#98A2B3]">{rec.name}</span>
-                          )}
+                          <span>{getProcessDisplayName(rec.display_name, rec.name)}</span>
                           <span className="text-xs text-[#98A2B3]">(PID {rec.pid})</span>
                         </Link>
 
@@ -431,7 +433,7 @@ export default function ProcessesPage() {
 
                     {/* Concise Summary Sentence */}
                     <p className="text-xs font-sans text-[#475569] leading-relaxed">
-                      {rec.what_process_is_doing || rec.activity_description}
+                      {hideExecutableNames(rec.what_process_is_doing || rec.activity_description)}
                     </p>
 
                     {/* Expanded 7-Dimensional Explainable Evidence Panel */}
@@ -443,7 +445,7 @@ export default function ProcessesPage() {
                               1. Resources Consumed
                             </span>
                             <div className="text-[#172033] glass-well p-3 rounded-xl border border-[#E5EAF1] font-sans">
-                              {rec.resources_consumed}
+                              {hideExecutableNames(rec.resources_consumed)}
                             </div>
                           </div>
 
@@ -461,7 +463,7 @@ export default function ProcessesPage() {
                               3. Classification Reason
                             </span>
                             <div className="text-[#172033] glass-well p-3 rounded-xl border border-[#E5EAF1] font-sans">
-                              {rec.classification_reason}
+                              {hideExecutableNames(rec.classification_reason)}
                             </div>
                           </div>
 
@@ -470,7 +472,7 @@ export default function ProcessesPage() {
                               4. Investigation Guidance
                             </span>
                             <div className="text-[#172033] glass-well p-3 rounded-xl border border-[#E5EAF1] font-sans">
-                              {rec.should_investigate || rec.investigation_advice}
+                              {hideExecutableNames(rec.should_investigate || rec.investigation_advice)}
                             </div>
                           </div>
 
@@ -479,7 +481,7 @@ export default function ProcessesPage() {
                               5. Manual Closure Consideration
                             </span>
                             <div className="text-[#172033] glass-well p-3 rounded-xl border border-[#E5EAF1] font-sans">
-                              {rec.manual_closure_considered || rec.manual_closure_guidance}
+                              {hideExecutableNames(rec.manual_closure_considered || rec.manual_closure_guidance)}
                             </div>
                           </div>
 
@@ -488,7 +490,7 @@ export default function ProcessesPage() {
                               6. Safety & Uncertainty Considerations
                             </span>
                             <div className="text-[#172033] glass-well p-3 rounded-xl border border-[#E5EAF1] font-sans">
-                              {rec.safety_and_uncertainty}
+                              {hideExecutableNames(rec.safety_and_uncertainty)}
                             </div>
                           </div>
                         </div>
@@ -503,7 +505,7 @@ export default function ProcessesPage() {
                               {rec.evidence.map((item: string, idx: number) => (
                                 <li key={idx} className="flex items-center gap-2">
                                   <span className="w-1.5 h-1.5 rounded-full bg-[#2563EB] shrink-0" />
-                                  <span>{item}</span>
+                                  <span>{hideExecutableNames(item)}</span>
                                 </li>
                               ))}
                             </ul>
@@ -523,7 +525,7 @@ export default function ProcessesPage() {
             <div>
               <h3 className="text-lg font-bold text-[#172033]">Running Applications & Grouped Processes</h3>
               <p className="text-xs text-[#667085] mt-1">
-                Grouped from the latest collector snapshot. CPU is normalized across {applicationsData?.cpu_core_count ?? "—"} logical cores; memory is resident set size (RSS).
+                Grouped from the latest snapshot. CPU is share of total capacity across {applicationsData?.cpu_core_count ?? "—"} logical cores; RAM is resident memory and its share of physical RAM.
               </p>
             </div>
             <div className="relative w-full md:max-w-xs">
@@ -531,7 +533,7 @@ export default function ProcessesPage() {
               <input
                 value={applicationSearch}
                 onChange={event => setApplicationSearch(event.target.value)}
-                placeholder="Search app, executable, or PID"
+                placeholder="Search app, process name, or PID"
                 className="w-full bg-white border border-[#E5EAF1] rounded-xl pl-9 pr-3.5 py-2 text-xs font-mono text-[#172033] placeholder-[#98A2B3] outline-none focus:border-[#2563EB] focus:ring-2 focus:ring-[#EFF6FF] shadow-2xs transition-all"
               />
             </div>
@@ -645,13 +647,12 @@ export default function ProcessesPage() {
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full min-w-[760px] text-xs font-mono">
+                <table className="w-full min-w-[900px] text-xs font-mono">
                   <thead className="bg-[#F8FAFC] text-[#667085] border-b border-[#E5EAF1]">
                     <tr>
                       <th className="text-left p-3.5 font-bold">Application</th>
-                      <th className="text-right p-3.5 font-bold">CPU</th>
-                      <th className="text-right p-3.5 font-bold">Memory</th>
-                      <th className="text-right p-3.5 font-bold">Memory %</th>
+                      <th className="text-left p-3.5 font-bold">CPU · total capacity</th>
+                      <th className="text-left p-3.5 font-bold">RAM · RSS / physical</th>
                       <th className="text-right p-3.5 font-bold">Processes</th>
                       <th className="text-left p-3.5 font-bold">Status</th>
                       <th className="p-3.5 text-center font-bold">Inspect</th>
@@ -659,15 +660,10 @@ export default function ProcessesPage() {
                   </thead>
                   <tbody className="divide-y divide-[#EDF0F5]">
                     {visibleApplications.map(application => {
-                      const expanded = expandedApplicationId === application.application_id;
-                      const memoryMb = application.memory_bytes / (1024 * 1024);
                       return (
                         <ApplicationRows
                           key={application.application_id}
                           application={application}
-                          expanded={expanded}
-                          memoryMb={memoryMb}
-                          onToggle={() => setExpandedApplicationId(expanded ? null : application.application_id)}
                         />
                       );
                     })}
@@ -749,15 +745,18 @@ export default function ProcessesPage() {
 
         {/* ── Process Matrix Table ────────────────────────────────────────────── */}
         <div className="liquid-glass-card rounded-2xl overflow-hidden shadow-xs border border-[#E5EAF1]">
+          <div className="border-b border-[#E5EAF1] bg-white px-5 py-3 text-[11px] text-[#667085]">
+            CPU is each process&apos;s share of total logical-core capacity. RAM shows resident memory (RSS) and its share of physical memory.
+          </div>
           <div className="overflow-x-auto">
-            <table className="w-full text-xs font-mono">
+            <table className="w-full min-w-[1100px] text-xs font-mono">
               <thead>
                 <tr className="border-b border-[#E5EAF1] bg-[#F8FAFC] text-[#667085]">
-                  <th className="text-left py-3.5 px-5 font-bold">Process & Lineage</th>
+                  <th className="text-left py-3.5 px-5 font-bold">Process Name</th>
                   <th className="text-left py-3.5 px-4 font-bold">Classification</th>
                   <th className="text-left py-3.5 px-4 font-bold">Safety Level</th>
-                  <th className="text-left py-3.5 px-5 font-bold w-48">CPU Allocation</th>
-                  <th className="text-right py-3.5 px-4 font-bold">Resident RAM</th>
+                  <th className="text-left py-3.5 px-5 font-bold w-48">CPU · total capacity</th>
+                  <th className="text-left py-3.5 px-4 font-bold w-52">RAM · RSS / physical</th>
                   <th className="text-center py-3.5 px-3 font-bold">Sockets</th>
                   <th className="text-right py-3.5 px-4 font-bold">Duration</th>
                   <th className="py-3.5 px-4"></th>
@@ -789,7 +788,8 @@ export default function ProcessesPage() {
                 ) : (
                   filtered.map((p, i) => {
                     const cpu = p.cpu_percent ?? 0;
-                    const memMb = p.memory_mb ?? 0;
+                    const memoryPercent = p.memory_percent ?? 0;
+                    const hasMemoryData = p.is_accessible && p.memory_bytes != null;
                     const isHighCpu = cpu > 40;
                     const isElevatedCpu = cpu > 15;
                     const classBadge = getClassBadge(p.activity_class);
@@ -808,7 +808,7 @@ export default function ProcessesPage() {
                             className="hover:text-[#2563EB] flex flex-col group-hover:underline transition-colors"
                           >
                             <div className="flex items-center gap-2">
-                              <span className="font-bold text-[#172033] truncate">{p.display_name || p.name}</span>
+                              <span className="font-bold text-[#172033] truncate">{getProcessDisplayName(p.display_name, p.name)}</span>
                               <span className="text-[11px] text-[#98A2B3] font-medium">#{p.pid}</span>
                               {p.is_foreground && (
                                 <span className="px-2 py-0.5 rounded-full text-[9px] bg-[#EFF6FF] text-[#2563EB] border border-[#BFDBFE] uppercase font-bold">
@@ -816,12 +816,9 @@ export default function ProcessesPage() {
                                 </span>
                               )}
                             </div>
-                            {p.display_name && p.display_name !== p.name && (
-                              <span className="text-[10px] text-[#98A2B3] truncate">{p.name}</span>
-                            )}
                             {p.parent_name && (
                               <span className="text-[10px] text-[#98A2B3] truncate">
-                                Parent: {p.parent_name}
+                                Parent: {getProcessDisplayName(p.parent_name)}
                               </span>
                             )}
                           </Link>
@@ -847,15 +844,15 @@ export default function ProcessesPage() {
                           </span>
                         </td>
 
-                        {/* CPU Bar + Value */}
+                        {/* CPU share of total system capacity */}
                         <td className="py-3.5 px-5">
                           <div className="flex items-center gap-3">
-                            <div className="flex-1 h-2 rounded-full bg-[#E5EAF1] overflow-hidden">
+                            <div className="flex-1 h-2 rounded-full bg-[#E5EAF1] overflow-hidden" role="progressbar" aria-label={`${getProcessDisplayName(p.display_name, p.name)} CPU usage`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={p.cpu_percent == null ? 0 : Math.min(cpu, 100)}>
                               <div
                                 className={`h-full rounded-full transition-all duration-300 ${
                                   isHighCpu ? "bg-[#DC2626]" : isElevatedCpu ? "bg-[#D97706]" : "bg-[#2563EB]"
                                 }`}
-                                style={{ width: `${Math.min(cpu, 100)}%` }}
+                                style={{ width: `${p.cpu_percent == null ? 0 : Math.min(cpu, 100)}%` }}
                               />
                             </div>
                             <span
@@ -867,14 +864,24 @@ export default function ProcessesPage() {
                                   : "text-[#172033]"
                               }`}
                             >
-                              {formatPct(p.cpu_percent)}
+                              {p.is_accessible ? formatPct(p.cpu_percent) : "—"}
                             </span>
                           </div>
                         </td>
 
-                        {/* Memory RSS */}
-                        <td className="py-3.5 px-4 text-[#172033] text-right font-bold">
-                          {memMb >= 1000 ? `${(memMb / 1024).toFixed(2)} GB` : `${memMb.toFixed(1)} MB`}
+                        {/* Resident RAM and share of physical system memory */}
+                        <td className="py-3.5 px-4">
+                          <div className="font-bold tabular-nums text-[#172033]">
+                            {hasMemoryData ? formatMemory(p.memory_bytes ?? 0) : "—"}
+                          </div>
+                          <div className="mt-1 flex items-center gap-2">
+                            <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-[#E5EAF1]" role="progressbar" aria-label={`${getProcessDisplayName(p.display_name, p.name)} physical memory usage`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={hasMemoryData ? Math.min(memoryPercent, 100) : 0}>
+                              <div className="h-full rounded-full bg-[#7C3AED] transition-all duration-300" style={{ width: `${hasMemoryData ? Math.min(memoryPercent, 100) : 0}%` }} />
+                            </div>
+                            <span className="w-12 text-right text-[10px] tabular-nums text-[#667085]">
+                              {hasMemoryData ? formatPct(p.memory_percent) : "—"}
+                            </span>
+                          </div>
                         </td>
 
                         {/* Sockets */}

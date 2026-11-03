@@ -31,6 +31,7 @@ _BROWSER_ROOTS = {
 _EDGE_HELPERS = {"msedgewebview2.exe", "msedge_proxy.exe"}
 _KNOWN_WINDOWS_APPS = {
     "mspaint.exe": ("microsoft-paint", "Microsoft Paint"),
+    "snippingtool.exe": ("windows-snipping-tool", "Snipping Tool"),
     "winstore.app.exe": ("microsoft-store", "Microsoft Store"),
 }
 _KNOWN_RUNTIME_PROCESSES = {
@@ -38,18 +39,32 @@ _KNOWN_RUNTIME_PROCESSES = {
     "pythonw.exe": ("python-runtime", "Python"),
     "node.exe": ("node-runtime", "Node.js Runtime"),
 }
+_WINDOWS_SERVICE_DISPLAY_NAMES = {
+    "svchost.exe": "Service Host",
+    "services.exe": "Windows Services Controller",
+    "dllhost.exe": "COM Surrogate",
+    "lsass.exe": "Local Security Authority Process",
+    "wininit.exe": "Windows Start-Up Application",
+    "csrss.exe": "Client Server Runtime Process",
+    "smss.exe": "Windows Session Manager",
+    "winlogon.exe": "Windows Logon Application",
+    "dwm.exe": "Desktop Window Manager",
+    "spoolsv.exe": "Print Spooler",
+    "widgetservice.exe": "Windows Widgets",
+}
 _KNOWN_APPLICATION_NAMES = {
     **{app_id: display_name for app_id, display_name in _BROWSER_ROOTS.values()},
     **{app_id: display_name for app_id, display_name in _KNOWN_WINDOWS_APPS.values()},
+    **{
+        f"windows-service:{process_name}": display_name
+        for process_name, display_name in _WINDOWS_SERVICE_DISPLAY_NAMES.items()
+    },
     "visual-studio-code": "Visual Studio Code",
     "systemos-monitor": "SYSTEMOS Monitor",
     "python-runtime": "Python",
     "node-runtime": "Node.js Runtime",
 }
-_WINDOWS_SERVICE_PROCESSES = {
-    "svchost.exe", "services.exe", "dllhost.exe", "lsass.exe", "wininit.exe",
-    "csrss.exe", "smss.exe", "winlogon.exe", "dwm.exe", "spoolsv.exe",
-}
+_WINDOWS_SERVICE_PROCESSES = set(_WINDOWS_SERVICE_DISPLAY_NAMES)
 
 _GENERIC_PE_DESCRIPTIONS = {
     "",
@@ -391,7 +406,7 @@ def resolve_process_identity(
     # OS service hosts are not user applications even when their binaries
     # carry a descriptive Windows product name.
     if name_lower in _WINDOWS_SERVICE_PROCESSES:
-        display_name = file_desc or process_name
+        display_name = _WINDOWS_SERVICE_DISPLAY_NAMES.get(name_lower, file_desc or process_name)
         display_source = "windows_service"
         confidence = 0.95 if file_desc else 0.8
         application_id = f"windows-service:{name_lower}"

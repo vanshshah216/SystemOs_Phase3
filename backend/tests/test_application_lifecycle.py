@@ -77,6 +77,21 @@ def test_application_start_is_recorded_once_after_baseline(monkeypatch):
     application_lifecycle.reset_application_lifecycle_baseline()
 
 
+def test_widget_board_is_not_recorded_as_a_user_application():
+    snapshots = [{
+        "pid": 10968,
+        "name": "WidgetBoard.exe",
+        "application_id": "uwp:microsoftwindows.client.webexperience_cw5n1h2txyewy",
+        "identity_json": json.dumps({
+            "application_id": "uwp:microsoftwindows.client.webexperience_cw5n1h2txyewy",
+            "display_name": "MicrosoftWindows.Client.WebExperience",
+            "role": "user_app",
+        }),
+    }]
+
+    assert application_lifecycle._candidate_applications(snapshots) == {}
+
+
 def test_events_api_includes_application_start_as_separate_activity(monkeypatch):
     connection = sqlite3.connect(":memory:")
     connection.row_factory = sqlite3.Row
@@ -107,6 +122,16 @@ def test_events_api_includes_application_start_as_separate_activity(monkeypatch)
         INSERT INTO application_lifecycle_event
             (timestamp, application_id, display_name, process_name, pid, evidence_json)
         VALUES (123, 'microsoft-paint', 'Microsoft Paint', 'mspaint.exe', 42, '{}');
+        INSERT INTO application_lifecycle_event
+            (timestamp, application_id, display_name, process_name, pid, evidence_json)
+        VALUES (
+            124,
+            'uwp:microsoftwindows.client.webexperience_cw5n1h2txyewy',
+            'MicrosoftWindows.Client.WebExperience',
+            'WidgetBoard.exe',
+            10968,
+            '{}'
+        );
         """
     )
     monkeypatch.setattr(events_api, "get_connection", lambda: connection)
@@ -121,6 +146,7 @@ def test_events_api_includes_application_start_as_separate_activity(monkeypatch)
     assert activity["primary_process_name"] == "mspaint.exe"
     assert activity["primary_pid"] == 42
     assert events_api.get_event(activity["id"])["event_type"] == "application_started"
+    assert len(result["events"]) == 1
 
     connection.close()
 

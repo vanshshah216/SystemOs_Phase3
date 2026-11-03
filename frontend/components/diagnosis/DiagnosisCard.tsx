@@ -3,6 +3,7 @@ import { Shield, ChevronRight, CheckCircle2, Clock, Cpu, AlertOctagon } from "lu
 import Link from "next/link";
 import type { DiagnosisEvent } from "@/types";
 import { formatDateTime, formatDuration, severityColor } from "@/lib/utils";
+import { getProcessDisplayName, hideExecutableNames } from "@/lib/processNames";
 
 interface DiagnosisCardProps {
   event: DiagnosisEvent;
@@ -60,7 +61,7 @@ export default function DiagnosisCard({ event, compact = false }: DiagnosisCardP
                   isHigh ? "text-rose-600" : "text-amber-700"
                 }`}
               >
-                {event.is_demo ? "DEMO SYNTHETIC — " : "REAL TELEMETRY — "}
+                REAL TELEMETRY —
                 {isMemoryGrowthObservation ? "MEMORY TREND OBSERVATION" : "SYSTEM BOTTLENECK"}
               </span>
               <span
@@ -74,7 +75,7 @@ export default function DiagnosisCard({ event, compact = false }: DiagnosisCardP
               </span>
             </div>
             <h3 className="text-lg font-bold text-[#172033] font-mono mt-0.5">
-              {event.probable_cause}
+              {hideExecutableNames(event.probable_cause)}
             </h3>
           </div>
         </div>
@@ -101,7 +102,7 @@ export default function DiagnosisCard({ event, compact = false }: DiagnosisCardP
           </div>
           <div className="text-sm font-bold text-slate-900 truncate mt-1 flex items-center gap-1.5">
             <Cpu className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-            <span className="truncate">{event.primary_display_name || event.primary_process || "—"}</span>
+            <span className="truncate">{getProcessDisplayName(event.primary_display_name, event.primary_process)}</span>
           </div>
         </div>
 
@@ -116,7 +117,7 @@ export default function DiagnosisCard({ event, compact = false }: DiagnosisCardP
         <div className="bg-slate-50/80 border border-slate-200/70 rounded-xl p-3 shadow-xs">
           <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Telemetry Engine</div>
           <div className="text-sm font-bold text-slate-800 mt-1 truncate">
-            {event.is_demo ? "Synthetic Inject" : "Psutil Kernel"}
+            Psutil Kernel
           </div>
         </div>
 
@@ -145,7 +146,7 @@ export default function DiagnosisCard({ event, compact = false }: DiagnosisCardP
                 className="flex items-start gap-2.5 text-xs text-slate-700 font-mono bg-slate-50/70 border border-slate-200/60 p-2.5 rounded-lg"
               >
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
-                <span className="leading-relaxed">{item}</span>
+                <span className="leading-relaxed">{hideExecutableNames(item)}</span>
               </div>
             ))}
           </div>

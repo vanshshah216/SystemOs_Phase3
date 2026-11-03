@@ -14,7 +14,7 @@ router = APIRouter(prefix="/browser-activity", tags=["browser activity"])
 class BrowserTabActivity(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    browser: Literal["Google Chrome", "Microsoft Edge"]
+    browser: Literal["Google Chrome"]
     title: str = Field(min_length=1, max_length=500)
     action: Literal["observed", "opened", "activated", "title_changed"]
 

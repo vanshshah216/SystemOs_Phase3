@@ -5,28 +5,22 @@ import MetricChart from "@/components/charts/MetricChart";
 import { useProcessHistory } from "@/hooks/useProcesses";
 import { api } from "@/lib/api";
 import { formatPct, formatBytes } from "@/lib/utils";
+import { getProcessDisplayName, hideExecutableNames } from "@/lib/processNames";
 import Link from "next/link";
 import {
   ArrowLeft,
   Cpu,
   MemoryStick,
   Clock,
-  Activity,
   Shield,
-  ShieldCheck,
   AlertTriangle,
   CheckCircle2,
   AlertCircle,
   Network,
   Sparkles,
   Terminal,
-  TrendingUp,
-  HardDrive,
-  HelpCircle,
-  Layers,
-  Zap,
 } from "lucide-react";
-import type { ProcessProfile, ProcessRecommendation } from "@/types";
+import type { ProcessRecommendation, SingleProcessAnalysisResponse } from "@/types";
 
 function formatDuration(seconds: number): string {
   if (!seconds || seconds <= 0) return "< 1m";
@@ -35,6 +29,41 @@ function formatDuration(seconds: number): string {
   const hours = Math.floor(mins / 60);
   const remMins = mins % 60;
   return `${hours}h ${remMins}m`;
+}
+
+function getRecommendationTitle(recommendation: ProcessRecommendation): string {
+  switch (recommendation.category) {
+    case "idle_high_memory":
+      return "Using a lot of memory while idle";
+    case "background_cpu_drain":
+      return "Using a lot of processing power in the background";
+    case "active_diagnosis":
+      return "Related to a system warning";
+    case "redundant_helper":
+      return "Background helper using system resources";
+    default:
+      return "Review this app's resource use";
+  }
+}
+
+function getRecommendationAction(
+  recommendation: ProcessRecommendation,
+  displayName: string,
+): string {
+  const isBrowser = /chrome|edge|firefox|brave|opera/i.test(displayName);
+  if (isBrowser && recommendation.category === "idle_high_memory") {
+    return `If you're finished with some pages in ${displayName}, save any work first, then close tabs you no longer need from the browser's tab bar. This may reduce memory use. SYSTEMOS can't close tabs for you.`;
+  }
+  if (isBrowser && recommendation.category === "background_cpu_drain") {
+    return `Check ${displayName} for a video, call, download, or page doing work in the background. Pause it or close tabs you're finished with, after saving any work. SYSTEMOS can't close tabs for you.`;
+  }
+  if (recommendation.category === "active_diagnosis") {
+    return "Open the related system warning and review its measured details. Avoid closing this app until you understand what the warning is reporting.";
+  }
+  if (recommendation.safety_tier === "protected_system") {
+    return "Leave this Windows task running. Do not try to close or end it.";
+  }
+  return `If you recognize ${displayName} and no longer need it, save your work and close it normally from its own menu. Don't use Force quit or End task based on this suggestion alone.`;
 }
 
 function getClassBadge(activityClass: string) {
@@ -114,25 +143,46 @@ export default function ProcessDetailPage({ params }: { params: Promise<{ pid: s
   const pid = parseInt(pidStr, 10);
 
   const { history, loading: historyLoading } = useProcessHistory(pid, 3600);
-  const [analysis, setAnalysis] = useState<{ profile: ProcessProfile; recommendations: ProcessRecommendation[] } | null>(null);
-  const [analysisLoading, setAnalysisLoading] = useState(true);
+  const [analysisState, setAnalysisState] = useState<{
+    pid: number;
+    result: SingleProcessAnalysisResponse | null;
+    error: string | null;
+  } | null>(null);
 
   useEffect(() => {
     if (!pid) return;
-    setAnalysisLoading(true);
+    let active = true;
     api.getSingleProcessAnalysis(pid)
-      .then(res => setAnalysis(res))
-      .catch(() => setAnalysis(null))
-      .finally(() => setAnalysisLoading(false));
+      .then(result => {
+        if (active) setAnalysisState({ pid, result, error: null });
+      })
+      .catch((error: unknown) => {
+        if (active) {
+          setAnalysisState({
+            pid,
+            result: null,
+            error: error instanceof Error ? error.message : "Process analysis request failed",
+          });
+        }
+      });
+    return () => {
+      active = false;
+    };
   }, [pid]);
 
-  const profile = analysis?.profile;
-  const recommendations = analysis?.recommendations ?? [];
+  const currentAnalysis = analysisState?.pid === pid ? analysisState : null;
+  const analysisLoading = currentAnalysis === null;
+  const profile = currentAnalysis?.result?.profile;
+  const recommendations = currentAnalysis?.result?.recommendations ?? [];
+  const analysisError = currentAnalysis?.error;
   const latest = history[history.length - 1];
 
-  const displayName = profile?.display_name ?? latest?.display_name ?? profile?.name ?? latest?.name ?? `Process ${pid}`;
-  const activityClass = profile?.activity_class ?? "Background process";
-  const safetyTier = profile?.safety_tier ?? "safe_to_review";
+  const displayName = getProcessDisplayName(
+    profile?.display_name ?? latest?.display_name,
+    profile?.name ?? latest?.name,
+  );
+  const activityClass = profile?.activity_class ?? "Insufficient information";
+  const safetyTier = profile?.safety_tier ?? "uncertain";
   const classBadge = getClassBadge(activityClass);
   const safety = getSafetyBadge(safetyTier);
   const SafetyIcon = safety.icon;
@@ -192,17 +242,11 @@ export default function ProcessDetailPage({ params }: { params: Promise<{ pid: s
               <h2 className="text-2xl sm:text-3xl font-extrabold text-[#172033] font-mono tracking-tight flex items-center gap-3">
                 <span>{displayName}</span>
               </h2>
-              {(profile?.name ?? latest?.name) && displayName !== (profile?.name ?? latest?.name) && (
-                <div className="mt-1 text-xs font-mono text-[#98A2B3]">
-                  Executable binary: {profile?.name ?? latest?.name}
-                </div>
-              )}
-
               {profile?.parent_name && (
                 <div className="text-xs text-[#667085] font-mono mt-1.5 flex items-center gap-2">
                   <Terminal className="w-3.5 h-3.5 text-[#98A2B3]" />
                   <span>
-                    Spawned by parent: <strong className="text-[#172033]">{profile.parent_name}</strong> {profile.ppid && `(PID ${profile.ppid})`}
+                    Spawned by parent: <strong className="text-[#172033]">{getProcessDisplayName(profile.parent_name)}</strong> {profile.ppid && `(PID ${profile.ppid})`}
                   </span>
                 </div>
               )}
@@ -279,70 +323,106 @@ export default function ProcessDetailPage({ params }: { params: Promise<{ pid: s
           </div>
         </div>
 
-        {/* ── Targeted Recommendations & Evidence (if applicable) ─────────────── */}
-        {recommendations.length > 0 && (
-          <div className="liquid-glass-card p-6 sm:p-7 space-y-4 shadow-xs border-[#FDE68A] bg-[#FFFBEB]/40">
-            <div className="flex items-center gap-2 border-b border-[#FDE68A]/70 pb-3">
-              <Sparkles className="w-5 h-5 text-[#D97706]" />
-              <h3 className="text-base font-bold font-mono text-[#172033]">
-                ACTIVE RECOMMENDATION FOR PID {pid}
-              </h3>
-              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold bg-[#FFFBEB] text-[#D97706] border border-[#FDE68A]">
-                {recommendations[0].category.toUpperCase()}
-              </span>
+        <section className="liquid-glass-card p-6 sm:p-7 space-y-4 shadow-xs">
+          <div className="flex items-center gap-2 border-b border-[#EDF0F5] pb-3">
+            <Sparkles className="w-5 h-5 text-[#2563EB]" />
+            <div>
+              <h3 className="text-base font-bold text-[#172033]">Live assessment & guidance</h3>
+              <p className="text-xs text-[#667085] mt-0.5">Based on this process profile and its measured telemetry.</p>
             </div>
-
-            {recommendations.map(rec => (
-              <div key={rec.id} className="space-y-4 text-xs font-mono">
-                <p className="text-[#172033] text-sm leading-relaxed font-sans">
-                  {rec.what_process_is_doing || rec.activity_description}
-                </p>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-                  <div className="glass-well p-3.5 space-y-1">
-                    <span className="text-[10px] uppercase text-[#98A2B3] font-bold">Unusual Pattern Assessment</span>
-                    <div className="text-[#172033] font-sans">{rec.is_usage_unusual}</div>
-                  </div>
-
-                  <div className="glass-well p-3.5 space-y-1">
-                    <span className="text-[10px] uppercase text-[#98A2B3] font-bold">Classification Justification</span>
-                    <div className="text-[#172033] font-sans">{rec.classification_reason}</div>
-                  </div>
-
-                  <div className="glass-well p-3.5 space-y-1">
-                    <span className="text-[10px] uppercase text-[#98A2B3] font-bold">Investigation Advice</span>
-                    <div className="text-[#172033] font-sans">{rec.should_investigate || rec.investigation_advice}</div>
-                  </div>
-
-                  <div className="glass-well p-3.5 space-y-1">
-                    <span className="text-[10px] uppercase text-[#98A2B3] font-bold">Manual Closure Guidance</span>
-                    <div className="text-[#172033] font-sans">{rec.manual_closure_considered || rec.manual_closure_guidance}</div>
-                  </div>
-                </div>
-
-                <div className="glass-well p-3.5 border-[#FDE68A] bg-[#FFFBEB]/60 text-[#D97706]">
-                  <strong className="text-[#B45309]">Safety & Uncertainty Note:</strong> {rec.safety_and_uncertainty}
-                </div>
-
-                {rec.evidence && rec.evidence.length > 0 && (
-                  <div className="space-y-1.5 pt-2">
-                    <span className="text-[11px] uppercase tracking-wider text-[#98A2B3] font-bold">
-                      Supporting Evidence
-                    </span>
-                    <ul className="space-y-1 text-[#667085]">
-                      {rec.evidence.map((item, idx) => (
-                        <li key={idx} className="flex items-center gap-2">
-                          <span className="w-1.5 h-1.5 rounded-full bg-[#2563EB] shrink-0" />
-                          <span>{item}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
-            ))}
           </div>
-        )}
+
+          {analysisLoading ? (
+            <p className="text-sm text-[#667085]" role="status">Loading the current process diagnosis…</p>
+          ) : analysisError ? (
+            <div className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800" role="alert">
+              <strong>Process analysis is unavailable.</strong> {analysisError}
+              <p className="mt-1 text-xs">Confirm the process is still running and that the backend is available, then reopen this inspection.</p>
+            </div>
+          ) : profile ? (
+            <>
+              <div className={`rounded-xl border p-4 ${
+                recommendations.length > 0
+                  ? "border-amber-200 bg-amber-50/70"
+                  : profile.activity_class === "Protected/system process" || profile.activity_class === "Insufficient information"
+                  ? "border-slate-200 bg-slate-50"
+                  : "border-emerald-200 bg-emerald-50/60"
+              }`}>
+                <div className="font-semibold text-[#172033]">
+                  {recommendations.length > 0
+                    ? `${recommendations[0].severity} priority · ${getRecommendationTitle(recommendations[0])}`
+                    : profile.activity_class === "Protected/system process"
+                    ? "Protected system process"
+                    : profile.activity_class === "Insufficient information"
+                    ? "Limited identity or access"
+                    : "No active resource warning detected"}
+                </div>
+                <p className="mt-1 text-sm text-[#475467]">
+                  {recommendations.length > 0
+                    ? `${displayName} is using ${formatPct(profile.cpu_percent)} CPU and ${profile.memory_mb.toFixed(1)} MB of memory right now.`
+                    : profile.activity_class === "Protected/system process"
+                    ? "Keep this process running. Do not attempt to end a protected operating-system process."
+                    : profile.activity_class === "Insufficient information"
+                    ? "Some details aren't available. Don't close this task unless you know which app it belongs to."
+                    : "The current measurements do not meet a recommendation rule. This is a point-in-time assessment, not a guarantee that the application is problem-free."}
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                <div className="glass-well p-3">
+                  <div className="text-[#667085]">Classification</div>
+                  <div className="mt-1 font-semibold text-[#172033]">{profile.activity_class}</div>
+                </div>
+                <div className="glass-well p-3">
+                  <div className="text-[#667085]">CPU / memory</div>
+                  <div className="mt-1 font-semibold text-[#172033]">{formatPct(profile.cpu_percent)} · {profile.memory_mb.toFixed(1)} MB</div>
+                </div>
+                <div className="glass-well p-3">
+                  <div className="text-[#667085]">Memory trend</div>
+                  <div className="mt-1 font-semibold capitalize text-[#172033]">{profile.trends.memory_trend ?? "Not enough samples"}</div>
+                </div>
+                <div className="glass-well p-3">
+                  <div className="text-[#667085]">Connections / threads</div>
+                  <div className="mt-1 font-semibold text-[#172033]">{profile.open_connections} · {profile.threads}</div>
+                </div>
+              </div>
+
+              {recommendations.length > 0 ? (
+                <div className="space-y-2 text-sm text-[#475467]">
+                  <p><strong className="text-[#172033]">What you can do:</strong> {getRecommendationAction(recommendations[0], displayName)}</p>
+                  <details className="rounded-xl border border-[#E5EAF1] bg-white px-4 py-3">
+                    <summary className="cursor-pointer text-xs font-semibold text-[#2563EB]">
+                      Show the measurements behind this suggestion
+                    </summary>
+                    <div className="mt-3 space-y-2 text-xs text-[#667085]">
+                      <p>{hideExecutableNames(recommendations[0].resources_consumed)}</p>
+                      <p>{hideExecutableNames(recommendations[0].is_usage_unusual)}</p>
+                      {recommendations[0].evidence.map((item, index) => (
+                        <p key={index}>{hideExecutableNames(item)}</p>
+                      ))}
+                      <p className="border-t border-[#EDF0F5] pt-2">{hideExecutableNames(recommendations[0].safety_and_uncertainty)}</p>
+                    </div>
+                  </details>
+                </div>
+              ) : (
+                <p className="text-sm text-[#475467]">
+                  No action is needed based on these measurements. Keep using the app normally; SYSTEMOS will show a suggestion if its resource use becomes unusual.
+                </p>
+              )}
+
+              {profile.attributed_events.length > 0 && (
+                <div className="space-y-2 border-t border-[#EDF0F5] pt-3">
+                  <h4 className="text-xs font-bold uppercase tracking-wide text-[#667085]">Related live diagnoses</h4>
+                  {profile.attributed_events.map(event => (
+                    <Link key={event.id} href={`/events/${event.id}`} className="block text-sm text-[#2563EB] hover:underline">
+                      {event.severity}: {hideExecutableNames(event.probable_cause)} · {new Date(event.start_time * 1000).toLocaleString()}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </>
+          ) : null}
+        </section>
 
         {/* ── Oscilloscope Historical Charts ──────────────────────────────────── */}
         {historyLoading && history.length === 0 ? (

@@ -17,7 +17,7 @@ router = APIRouter(prefix="/events", tags=["events"])
 def list_events(
     limit: int = 100,
     status: str = Query(None),
-    live_only: bool = Query(False, description="Exclude demo/simulation events"),
+    live_only: bool = Query(True, description="Exclude demo/simulation events"),
     include_applications: bool = Query(False, description="Include application start activity"),
 ):
     """Return diagnostic events, optionally combined with application activity."""
@@ -41,6 +41,9 @@ def list_events(
         activity_rows = conn.execute(
             """SELECT id, timestamp, application_id, display_name, process_name, pid, evidence_json
                FROM application_lifecycle_event
+               WHERE LOWER(process_name) != 'widgetboard.exe'
+                 AND LOWER(application_id) NOT LIKE '%microsoftwindows.client.webexperience%'
+                 AND LOWER(display_name) NOT LIKE '%microsoftwindows.client.webexperience%'
                ORDER BY timestamp DESC LIMIT ?""",
             (limit,),
         ).fetchall()
@@ -48,6 +51,7 @@ def list_events(
         browser_rows = conn.execute(
             """SELECT id, timestamp, browser, title, action
                FROM browser_tab_event
+               WHERE browser='Google Chrome'
                ORDER BY timestamp DESC LIMIT ?""",
             (limit,),
         ).fetchall()
@@ -63,7 +67,8 @@ def get_event(event_id: int):
     conn = get_connection()
     if event_id <= -1_000_000_000:
         row = conn.execute(
-            "SELECT id, timestamp, browser, title, action FROM browser_tab_event WHERE id=?",
+            "SELECT id, timestamp, browser, title, action FROM browser_tab_event "
+            "WHERE id=? AND browser='Google Chrome'",
             (-event_id - 1_000_000_000,),
         ).fetchone()
         if row:

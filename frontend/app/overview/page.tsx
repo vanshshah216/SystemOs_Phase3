@@ -6,7 +6,6 @@ import LivePerformanceSection from "@/components/overview/LivePerformanceSection
 import CurrentDiagnosisSection from "@/components/overview/CurrentDiagnosisSection";
 import TopProcessesSection from "@/components/overview/TopProcessesSection";
 import RecentEventsSection from "@/components/overview/RecentEventsSection";
-import DemoPanel from "@/components/demo/DemoPanel";
 import PreventionAndRecovery from "@/components/diagnosis/PreventionAndRecovery";
 import { useCurrentMetrics } from "@/hooks/useMetrics";
 import { useEvents } from "@/hooks/useEvents";
@@ -121,9 +120,6 @@ export default function OverviewPage() {
           events={events}
           loading={eventsLoading}
         />
-
-        {/* SECTION 8: Demo Simulation Panel */}
-        <DemoPanel />
       </main>
     </div>
   );

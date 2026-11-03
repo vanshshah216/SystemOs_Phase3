@@ -3,6 +3,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useProcesses } from "@/hooks/useProcesses";
 import { formatPct, formatBytes } from "@/lib/utils";
+import { getProcessDisplayName } from "@/lib/processNames";
 import { Cpu, MemoryStick, HardDrive, ArrowRight } from "lucide-react";
 
 const TABS = [
@@ -111,12 +112,7 @@ export default function TopProcessesSection() {
                         className="hover:text-[#2563EB] flex items-center gap-2 transition-colors"
                       >
                         <span className="w-1.5 h-1.5 rounded-full bg-[#2563EB]" />
-                        <span className="flex min-w-0 flex-col">
-                          <span className="truncate">{p.display_name || p.name}</span>
-                          {p.display_name && p.display_name !== p.name && (
-                            <span className="truncate text-[10px] font-normal text-[#98A2B3]">{p.name}</span>
-                          )}
-                        </span>
+                        <span className="truncate">{getProcessDisplayName(p.display_name, p.name)}</span>
                       </Link>
                     </td>
 

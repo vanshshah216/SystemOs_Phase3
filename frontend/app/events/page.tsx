@@ -2,9 +2,10 @@
 import { useState, useMemo } from "react";
 import TopBar from "@/components/layout/TopBar";
 import { useEvents } from "@/hooks/useEvents";
-import { formatDateTime, formatDuration } from "@/lib/utils";
+import { formatDateTime } from "@/lib/utils";
 import Link from "next/link";
 import { ChevronRight, Search } from "lucide-react";
+import { getProcessDisplayName, hideExecutableNames } from "@/lib/processNames";
 
 const FILTERS = [
   { id: "all", label: "All Events" },
@@ -98,7 +99,6 @@ export default function EventsPage() {
                   <th className="text-left py-3.5 px-4 font-semibold">Severity</th>
                   <th className="text-left py-3.5 px-4 font-semibold">Probable Cause</th>
                   <th className="text-left py-3.5 px-4 font-semibold">Process Association</th>
-                  <th className="text-left py-3.5 px-4 font-semibold">Duration</th>
                   <th className="text-left py-3.5 px-4 font-semibold">Timestamp</th>
                   <th className="text-left py-3.5 px-4 font-semibold">Status</th>
                   <th className="py-3.5 px-4"></th>
@@ -107,19 +107,19 @@ export default function EventsPage() {
               <tbody className="divide-y divide-slate-100">
                 {loading && events.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="py-16 text-center text-slate-400 font-mono">
+                    <td colSpan={6} className="py-16 text-center text-slate-400 font-mono">
                       Loading event history...
                     </td>
                   </tr>
                 ) : error && events.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="py-16 text-center text-amber-700 font-mono">
+                    <td colSpan={6} className="py-16 text-center text-amber-700 font-mono">
                       Event history is unavailable: {error}
                     </td>
                   </tr>
                 ) : filteredEvents.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="py-16 text-center text-slate-400 font-mono">
+                    <td colSpan={6} className="py-16 text-center text-slate-400 font-mono">
                       No events match the selected criteria.
                     </td>
                   </tr>
@@ -147,23 +147,23 @@ export default function EventsPage() {
                                 : "bg-blue-50 text-blue-700 border-blue-200"
                             }`}
                           >
-                            {isBrowserTabActivity ? "TAB" : isApplicationStart ? "APP" : event.severity}
+                            {isBrowserTabActivity
+                              ? "TAB"
+                              : isApplicationStart
+                              ? "APP"
+                              : event.severity}
                           </span>
                         </td>
 
                         <td className="py-3.5 px-4 text-slate-900 font-semibold max-w-sm truncate">
                           <Link href={`/events/${event.id}`} className="hover:text-blue-600 transition-colors">
-                            {event.probable_cause}
+                            {hideExecutableNames(event.probable_cause)}
                           </Link>
                         </td>
 
                         <td className="py-3.5 px-4 text-slate-700 font-medium">
-                          {event.primary_display_name || event.primary_process || "Not established"}
+                          {getProcessDisplayName(event.primary_display_name, event.primary_process)}
                           {event.primary_pid ? <span className="ml-1 text-slate-400">PID {event.primary_pid}</span> : null}
-                        </td>
-
-                        <td className="py-3.5 px-4 text-slate-500">
-                          {formatDuration(event.start_time, event.end_time)}
                         </td>
 
                         <td className="py-3.5 px-4 text-slate-500 whitespace-nowrap">

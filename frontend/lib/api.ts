@@ -15,7 +15,7 @@ import type {
   SingleProcessAnalysisResponse,
 } from "@/types";
 
-const BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const BASE = process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, "") || "/api";
 
 let healthRequest: Promise<HealthResponse> | null = null;
 let cachedHealth: HealthResponse | null = null;
@@ -177,16 +177,4 @@ export const api = {
       body: JSON.stringify(body),
     }),
 
-  // ── Demo ───────────────────────────────────────────────────────────────────
-  getDemoScenarios: () =>
-    apiFetch<unknown>("/demo/scenarios"),
-
-  startDemo: (scenario: string) =>
-    apiFetch<unknown>("/demo/start", { method: "POST", body: JSON.stringify({ scenario }) }),
-
-  stopDemo: () =>
-    apiFetch<unknown>("/demo/stop", { method: "POST" }),
-
-  getDemoStatus: () =>
-    apiFetch<unknown>("/demo/status"),
 };

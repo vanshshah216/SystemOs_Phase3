@@ -1,6 +1,7 @@
 "use client";
 import { CheckCircle2, Info, RefreshCw } from "lucide-react";
 import type { DiagnosisEvent } from "@/types";
+import { getProcessDisplayName, hideExecutableNames } from "@/lib/processNames";
 import { useCurrentMetrics } from "@/hooks/useMetrics";
 
 interface PreventionAndRecoveryProps {
@@ -87,7 +88,7 @@ export default function PreventionAndRecovery({ event }: PreventionAndRecoveryPr
           <h3 className="font-semibold text-base">Memory increase observed</h3>
         </div>
         <p className="text-sm text-slate-600 leading-relaxed">
-          {event.primary_display_name || event.primary_process || "A process"} used more resident memory over time.
+          {getProcessDisplayName(event.primary_display_name, event.primary_process)} used more resident memory over time.
           This trend alone does not show a memory leak, a performance problem, or that the app should be closed.
           Applications can use additional memory during normal work or while caching data.
         </p>
@@ -116,7 +117,7 @@ export default function PreventionAndRecovery({ event }: PreventionAndRecoveryPr
         </div>
 
         <span className="text-xs font-mono text-slate-600 bg-slate-50 border border-slate-200 px-3 py-1 rounded-lg self-start sm:self-center font-semibold">
-          Target: {event.probable_cause}
+          Target: {hideExecutableNames(event.probable_cause)}
         </span>
       </div>
 
@@ -158,7 +159,7 @@ export default function PreventionAndRecovery({ event }: PreventionAndRecoveryPr
               <>
                 <li className="flex items-start gap-2.5 p-3 rounded-xl bg-slate-50/70 border border-slate-200/60 shadow-xs">
                   <CheckCircle2 className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
-                  <span>Review memory-heavy applications ({event.primary_display_name || event.primary_process || "primary observed contributor"}).</span>
+                  <span>Review memory-heavy applications ({getProcessDisplayName(event.primary_display_name, event.primary_process)}).</span>
                 </li>
                 <li className="flex items-start gap-2.5 p-3 rounded-xl bg-slate-50/70 border border-slate-200/60 shadow-xs">
                   <CheckCircle2 className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
@@ -186,7 +187,7 @@ export default function PreventionAndRecovery({ event }: PreventionAndRecoveryPr
               <>
                 <li className="flex items-start gap-2.5 p-3 rounded-xl bg-slate-50/70 border border-slate-200/60 shadow-xs">
                   <CheckCircle2 className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-                  <span>Identify the process generating heavy I/O ({event.primary_display_name || event.primary_process || "Storage Worker"}).</span>
+                  <span>Identify the process generating heavy I/O ({getProcessDisplayName(event.primary_display_name, event.primary_process)}).</span>
                 </li>
                 <li className="flex items-start gap-2.5 p-3 rounded-xl bg-slate-50/70 border border-slate-200/60 shadow-xs">
                   <CheckCircle2 className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />

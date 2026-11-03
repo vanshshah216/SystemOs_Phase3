@@ -3,6 +3,7 @@ import Link from "next/link";
 import { CheckCircle2, ShieldCheck, ArrowRight, Cpu, Clock, AlertTriangle } from "lucide-react";
 import type { DiagnosisEvent } from "@/types";
 import { formatDateTime, formatDuration } from "@/lib/utils";
+import { getProcessDisplayName, hideExecutableNames } from "@/lib/processNames";
 
 interface CurrentDiagnosisSectionProps {
   activeEvent: DiagnosisEvent | null | undefined;
@@ -85,7 +86,7 @@ export default function CurrentDiagnosisSection({ activeEvent, loading }: Curren
             </span>
           </div>
           <h3 className="text-xl font-bold text-[#172033] tracking-tight">
-            {activeEvent.probable_cause}
+            {hideExecutableNames(activeEvent.probable_cause)}
           </h3>
           <div className="flex items-center gap-2 mt-2 text-xs font-mono text-[#667085]">
             <Clock className="w-3.5 h-3.5 text-[#98A2B3]" />
@@ -101,7 +102,7 @@ export default function CurrentDiagnosisSection({ activeEvent, loading }: Curren
           <div className="flex items-center gap-2 mt-1">
             <Cpu className="w-4 h-4 text-[#2563EB]" />
             <span className="text-base font-bold font-mono text-[#172033]">
-              {activeEvent.primary_display_name || activeEvent.primary_process || "System Aggregate"}
+              {getProcessDisplayName(activeEvent.primary_display_name, activeEvent.primary_process)}
             </span>
           </div>
           <span className="text-[11px] font-mono text-[#98A2B3] mt-1 leading-normal">
@@ -145,7 +146,7 @@ export default function CurrentDiagnosisSection({ activeEvent, loading }: Curren
             {items.map((item: string, i: number) => (
               <div key={i} className="flex items-start gap-2.5 p-3 rounded-xl bg-white border border-[#E5EAF1] text-xs font-mono text-[#172033] shadow-2xs">
                 <CheckCircle2 className="w-4 h-4 text-[#16A34A] shrink-0 mt-0.5" />
-                <span className="leading-relaxed">{item}</span>
+                <span className="leading-relaxed">{hideExecutableNames(item)}</span>
               </div>
             ))}
           </div>

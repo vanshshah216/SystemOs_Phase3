@@ -1,6 +1,7 @@
 "use client";
 import { CheckCircle2, AlertTriangle, XCircle, ShieldCheck } from "lucide-react";
 import type { SystemMetric, DiagnosisEvent } from "@/types";
+import { hideExecutableNames } from "@/lib/processNames";
 
 interface SystemHealthCardProps {
   metrics: SystemMetric | null | undefined;
@@ -16,8 +17,8 @@ export default function SystemHealthCard({ metrics, activeEvents, loading }: Sys
 
   if (activeEvents.length > 0) {
     const topEvent = activeEvents[0];
-    const proc = topEvent.primary_process ? ` (${topEvent.primary_process})` : "";
-    explanation = `${topEvent.probable_cause}${proc}. Condition verified by statistical persistence and multi-signal attribution.`;
+    const proc = topEvent.primary_process ? ` (${hideExecutableNames(topEvent.primary_process)})` : "";
+    explanation = `${hideExecutableNames(topEvent.probable_cause)}${proc}. Condition verified by statistical persistence and multi-signal attribution.`;
   } else if (metrics?.ram_context?.is_sustained) {
     explanation = `RAM usage (${metrics.ram_percent?.toFixed(1)}%) is elevated above baseline (${metrics.ram_context.mean?.toFixed(1)}%) for ${metrics.ram_context.consecutive_anomalies ?? 4} consecutive samples.`;
   } else if (metrics?.cpu_context?.is_sustained) {

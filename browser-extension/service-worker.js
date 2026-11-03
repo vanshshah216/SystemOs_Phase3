@@ -2,16 +2,15 @@ const API_URL = "http://127.0.0.1:8000/browser-activity";
 const pendingNewTabs = new Set();
 const lastSent = new Map();
 
-const browserName = navigator.userAgent.includes("Edg/")
-  ? "Microsoft Edge"
-  : "Google Chrome";
+const isEdge = navigator.userAgent.includes("Edg/");
+const browserName = "Google Chrome";
 
 function isBrowserInternalUrl(url = "") {
   return /^(chrome|edge|about|chrome-extension|edge-extension):/i.test(url);
 }
 
 async function sendTab(tab, action) {
-  if (!tab?.id || !tab.title || isBrowserInternalUrl(tab.url)) return;
+  if (isEdge || !tab?.id || !tab.title || isBrowserInternalUrl(tab.url)) return;
 
   const key = `${tab.id}:${action}:${tab.title}`;
   const now = Date.now();

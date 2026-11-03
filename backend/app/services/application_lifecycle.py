@@ -14,6 +14,18 @@ logger = logging.getLogger("systemos.application_lifecycle")
 _baseline_initialized = False
 
 
+def _is_noisy_system_component(
+    application_id: str,
+    process_name: str,
+    display_name: str,
+) -> bool:
+    return (
+        process_name.casefold() == "widgetboard.exe"
+        or "microsoftwindows.client.webexperience" in application_id.casefold()
+        or "microsoftwindows.client.webexperience" in display_name.casefold()
+    )
+
+
 def reset_application_lifecycle_baseline() -> None:
     global _baseline_initialized
     _baseline_initialized = False
@@ -34,6 +46,14 @@ def _candidate_applications(snapshots: list[dict[str, Any]]) -> dict[str, dict[s
         if not application_id or not process_name:
             continue
 
+        display_name = identity.get("display_name") or process_name
+        if _is_noisy_system_component(
+            str(application_id),
+            str(process_name),
+            str(display_name),
+        ):
+            continue
+
         role = identity.get("role")
         if role in {"system", "service", "helper", "monitor_runtime", "protected_system_process"}:
             continue
@@ -48,7 +68,7 @@ def _candidate_applications(snapshots: list[dict[str, Any]]) -> dict[str, dict[s
 
         candidate = {
             "application_id": str(application_id),
-            "display_name": identity.get("display_name") or f"{process_name} (unidentified application)",
+            "display_name": display_name,
             "process_name": str(process_name),
             "pid": snapshot.get("pid"),
         }

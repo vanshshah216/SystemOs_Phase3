@@ -3,6 +3,7 @@ import Link from "next/link";
 import { formatDateTime, formatDuration } from "@/lib/utils";
 import type { DiagnosisEvent } from "@/types";
 import { ChevronRight, ArrowRight } from "lucide-react";
+import { getProcessDisplayName, hideExecutableNames } from "@/lib/processNames";
 
 interface RecentEventsSectionProps {
   events: DiagnosisEvent[];
@@ -86,12 +87,12 @@ export default function RecentEventsSection({ events, loading }: RecentEventsSec
 
                     <td className="py-3.5 px-3 text-[#172033] font-bold max-w-xs truncate">
                       <Link href={`/events/${event.id}`} className="hover:text-[#2563EB] transition-colors">
-                        {event.probable_cause}
+                        {hideExecutableNames(event.probable_cause)}
                       </Link>
                     </td>
 
                     <td className="py-3.5 px-3 text-[#667085] font-semibold">
-                      {event.primary_display_name || event.primary_process || "—"}
+                      {getProcessDisplayName(event.primary_display_name, event.primary_process)}
                     </td>
 
                     <td className="py-3.5 px-3 text-[#667085]">

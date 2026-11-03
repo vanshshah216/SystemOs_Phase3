@@ -18,7 +18,6 @@ from app.api.applications import router as applications_router
 from app.api.events       import router as events_router
 from app.api.health       import router as health_router
 from app.api.settings     import router as settings_router
-from app.api.demo         import router as demo_router
 from app.api.browser_activity import router as browser_activity_router
 
 logging.basicConfig(
@@ -63,7 +62,6 @@ app.include_router(processes_router)
 app.include_router(events_router)
 app.include_router(health_router)
 app.include_router(settings_router)
-app.include_router(demo_router)
 app.include_router(browser_activity_router)
 
 

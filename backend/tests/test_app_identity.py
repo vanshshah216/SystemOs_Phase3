@@ -161,6 +161,39 @@ def test_historical_store_process_name_resolves_to_application_name():
     assert recognizable_application_name("WinStore.App.exe") == "Microsoft Store"
 
 
+@pytest.mark.parametrize(
+    ("process_name", "expected_name"),
+    [
+        ("svchost.exe", "Service Host"),
+        ("dwm.exe", "Desktop Window Manager"),
+        ("csrss.exe", "Client Server Runtime Process"),
+        ("spoolsv.exe", "Print Spooler"),
+        ("SnippingTool.exe", "Snipping Tool"),
+    ],
+)
+def test_common_windows_processes_have_readable_names(process_name, expected_name):
+    from app.collector.app_identity import clear_identity_cache
+
+    clear_identity_cache()
+    proc = MagicMock()
+    proc.create_time.return_value = 6000.0
+    proc.name.return_value = process_name
+    proc.ppid.return_value = 1
+    proc.exe.return_value = rf"C:\Windows\System32\{process_name}"
+
+    ident = resolve_process_identity(
+        900005,
+        proc=proc,
+        process_name=process_name,
+        create_time=6000.0,
+    )
+
+    assert ident.display_name == expected_name
+    assert not ident.is_fallback_label
+    assert recognizable_application_name(process_name, ident.application_id) == expected_name
+    clear_identity_cache()
+
+
 def test_python_runtime_gets_a_readable_name():
     from app.collector.app_identity import clear_identity_cache
 

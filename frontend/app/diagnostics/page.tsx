@@ -1,11 +1,11 @@
 "use client";
 import TopBar from "@/components/layout/TopBar";
-import DemoPanel from "@/components/demo/DemoPanel";
 import { useEvents } from "@/hooks/useEvents";
 import { useCurrentMetrics } from "@/hooks/useMetrics";
 import { useProcessRecommendations } from "@/hooks/useProcesses";
 import { formatDateTime, formatDuration } from "@/lib/utils";
 import Link from "next/link";
+import { getProcessDisplayName, hideExecutableNames } from "@/lib/processNames";
 import {
   CheckCircle2,
   ArrowRight,
@@ -28,9 +28,9 @@ export default function DiagnosticsPage() {
   const strength = evData?.evidence_strength;
   const items = evData?.evidence_items ?? [];
   const primaryLabel =
-    topEvent?.primary_display_name ||
-    topEvent?.primary_process ||
-    "Process cause not established";
+    topEvent
+      ? getProcessDisplayName(topEvent.primary_display_name, topEvent.primary_process)
+      : "Process cause not established";
   const primaryExe = topEvent?.primary_process_name || topEvent?.primary_process;
 
   // Match recommendations for primary contributing process or top active consumers
@@ -49,7 +49,6 @@ export default function DiagnosticsPage() {
     .filter(r => !matchingRecs.some(m => m.pid === r.pid))
     .slice(0, 3);
 
-  const isDemoActive = Boolean(topEvent?.is_demo);
   const isMemoryGrowthObservation =
     rawStats.rule_id === "E" ||
     /memory growth|memory increase observed/i.test(topEvent?.probable_cause || "");
@@ -70,20 +69,10 @@ export default function DiagnosticsPage() {
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
-            {isDemoActive ? (
-              <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-50 border border-amber-200 text-amber-800 text-xs font-mono shadow-xs">
-                <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-                <span className="font-bold">DEMO SIMULATION DATA</span>
-                <span className="text-slate-500 text-[10px] hidden sm:inline">— Synthesized scenario active</span>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-mono shadow-xs">
-                <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                <span className="font-bold">LIVE TELEMETRY</span>
-                <span className="text-slate-500 text-[10px] hidden sm:inline">— Windows / psutil telemetry</span>
-              </div>
-            )}
+          <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-mono shadow-xs">
+            <span className="w-2 h-2 rounded-full bg-emerald-500" />
+            <span className="font-bold">LIVE TELEMETRY</span>
+            <span className="text-slate-500 text-[10px] hidden sm:inline">— Windows / psutil telemetry</span>
           </div>
         </div>
 
@@ -119,13 +108,9 @@ export default function DiagnosticsPage() {
                     : topEvent.status === "active" ? "ACTIVE EVENT" : "LATEST RECORD"}
                 </span>
                 <span
-                  className={`text-xs font-mono px-2.5 py-1 rounded-full border ${
-                    topEvent.is_demo
-                      ? "bg-amber-50 text-amber-700 border-amber-200"
-                      : "bg-slate-100 text-slate-700 border-slate-200"
-                  }`}
+                  className="text-xs font-mono px-2.5 py-1 rounded-full border bg-slate-100 text-slate-700 border-slate-200"
                 >
-                  {topEvent.is_demo ? "DEMO" : "LIVE"}
+                  LIVE
                 </span>
               </div>
             )}
@@ -138,7 +123,7 @@ export default function DiagnosticsPage() {
                   {isMemoryGrowthObservation ? "What was observed" : "Probable cause"}
                 </div>
                 <div className="text-xl font-bold text-slate-900 font-sans mt-1">
-                  {topEvent.probable_cause}
+                  {hideExecutableNames(topEvent.probable_cause)}
                 </div>
                 <div className="text-xs text-slate-500 font-mono mt-1">
                   Detected: {formatDateTime(topEvent.start_time)} ({formatDuration(topEvent.start_time, topEvent.end_time)})
@@ -281,7 +266,7 @@ export default function DiagnosticsPage() {
                   <div className="text-slate-500 text-[10px]">Correlated Vectors:</div>
                   <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/60 text-[10px] space-y-1 shadow-xs">
                     {(items.length > 0 ? items : ["No correlated measurements were recorded for this event."]).map((item: string, index: number) => (
-                      <div key={index} className="text-slate-700">• {item}</div>
+                      <div key={index} className="text-slate-700">• {hideExecutableNames(item)}</div>
                     ))}
                   </div>
                 </div>
@@ -340,7 +325,7 @@ export default function DiagnosticsPage() {
                   <div className={`p-2.5 rounded-xl font-bold text-xs shadow-xs ${
                     isMemoryGrowthObservation ? "bg-blue-50 border border-blue-200 text-blue-700" : "bg-rose-50 border border-rose-200 text-rose-700"
                   }`}>
-                    {topEvent?.probable_cause || "No event recorded"}
+                    {topEvent ? hideExecutableNames(topEvent.probable_cause) : "No event recorded"}
                   </div>
                   <p className="text-[11px] text-slate-500 font-sans leading-relaxed">
                     {isMemoryGrowthObservation
@@ -405,7 +390,7 @@ export default function DiagnosticsPage() {
                       </div>
                       <div>
                         <h4 className="text-base font-bold text-slate-900 font-mono flex items-center gap-2 flex-wrap">
-                          {rec.display_name || rec.name}
+                          {getProcessDisplayName(rec.display_name, rec.name)}
                           <span
                             className={`text-[10px] font-mono uppercase px-2 py-0.5 rounded-md font-bold border ${
                               rec.severity === "HIGH"
@@ -454,21 +439,21 @@ export default function DiagnosticsPage() {
                     <div className="p-3.5 rounded-xl bg-white border border-slate-200/80 shadow-xs">
                       <div className="text-[11px] font-sans text-slate-500">What It Is Doing</div>
                       <div className="text-xs text-slate-800 font-sans font-medium mt-1">
-                        {rec.what_process_is_doing || rec.activity_description}
+                        {hideExecutableNames(rec.what_process_is_doing || rec.activity_description)}
                       </div>
                     </div>
 
                     <div className="p-3.5 rounded-xl bg-white border border-slate-200/80 shadow-xs">
                       <div className="text-[11px] font-sans text-slate-500">Resources Consumed</div>
                       <div className="text-xs text-blue-700 font-mono font-bold mt-1">
-                        {rec.resources_consumed}
+                        {hideExecutableNames(rec.resources_consumed)}
                       </div>
                     </div>
 
                     <div className="p-3.5 rounded-xl bg-white border border-slate-200/80 shadow-xs">
                       <div className="text-[11px] font-sans text-slate-500">Anomaly Assessment</div>
                       <div className="text-xs text-slate-800 font-sans mt-1">
-                        {rec.is_usage_unusual}
+                        {hideExecutableNames(rec.is_usage_unusual)}
                       </div>
                     </div>
                   </div>
@@ -480,7 +465,7 @@ export default function DiagnosticsPage() {
                         Classification Rationale
                       </div>
                       <p className="text-slate-700 leading-relaxed">
-                        {rec.classification_reason}
+                        {hideExecutableNames(rec.classification_reason)}
                       </p>
                     </div>
 
@@ -489,7 +474,7 @@ export default function DiagnosticsPage() {
                         Investigation Guidance
                       </div>
                       <p className="text-slate-700 leading-relaxed">
-                        {rec.should_investigate || rec.investigation_advice}
+                        {hideExecutableNames(rec.should_investigate || rec.investigation_advice)}
                       </p>
                     </div>
 
@@ -498,7 +483,7 @@ export default function DiagnosticsPage() {
                         Manual Closure Consideration
                       </div>
                       <p className="text-slate-700 leading-relaxed">
-                        {rec.manual_closure_considered || rec.manual_closure_guidance}
+                        {hideExecutableNames(rec.manual_closure_considered || rec.manual_closure_guidance)}
                       </p>
                     </div>
 
@@ -507,7 +492,7 @@ export default function DiagnosticsPage() {
                         Safety & Uncertainty Constraints
                       </div>
                       <p className="text-slate-700 leading-relaxed">
-                        {rec.safety_and_uncertainty}
+                        {hideExecutableNames(rec.safety_and_uncertainty)}
                       </p>
                     </div>
                   </div>
@@ -523,7 +508,7 @@ export default function DiagnosticsPage() {
                         {rec.evidence.map((item: string, idx: number) => (
                           <div key={idx} className="flex items-start gap-2 bg-white px-2.5 py-1.5 rounded-lg border border-slate-200/70 shadow-xs">
                             <span className="text-blue-600">•</span>
-                            <span>{item}</span>
+                            <span>{hideExecutableNames(item)}</span>
                           </div>
                         ))}
                       </div>
@@ -574,17 +559,17 @@ export default function DiagnosticsPage() {
                         <div>
                           <div className="flex items-center justify-between text-xs font-mono">
                             <span className="font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
-                              {rec.display_name || rec.name}
+                              {getProcessDisplayName(rec.display_name, rec.name)}
                             </span>
                             <span className="text-slate-500">PID {rec.pid}</span>
                           </div>
                           <div className="text-xs text-slate-500 font-sans mt-1 line-clamp-2">
-                            {rec.what_process_is_doing || rec.activity_description}
+                            {hideExecutableNames(rec.what_process_is_doing || rec.activity_description)}
                           </div>
                         </div>
 
                         <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs font-mono">
-                          <span className="text-blue-600 font-semibold">{rec.resources_consumed}</span>
+                          <span className="text-blue-600 font-semibold">{hideExecutableNames(rec.resources_consumed)}</span>
                           <span className="text-blue-600 group-hover:translate-x-0.5 transition font-semibold">
                             Inspect →
                           </span>
@@ -705,8 +690,6 @@ export default function DiagnosticsPage() {
           </div>
         </div>
 
-        {/* SECTION 6: DEMO SIMULATION DECK */}
-        <DemoPanel />
       </main>
     </div>
   );

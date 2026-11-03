@@ -212,35 +212,11 @@ def test_error_handling_events_detail_not_found(client):
     assert resp.status_code == 404
 
 
-# ── 5. Demo Simulator Lifecycle Verification ───────────────────────────────────
+# ── 5. Demo simulator is not exposed by the live-data API ──────────────────────
 
-def test_demo_simulator_lifecycle(client):
-    """
-    Verifies listing scenarios, starting, checking status, and stopping cleanly.
-    """
-    # 1. Scenarios
-    sc_resp = client.get("/demo/scenarios")
-    assert sc_resp.status_code == 200
-    scenarios = sc_resp.json().get("scenarios", [])
-    assert any(s["id"] == "cpu_stress" for s in scenarios)
-    assert any(s["id"] == "memory_pressure" for s in scenarios)
-    assert any(s["id"] == "process_memory_growth" for s in scenarios)
-
-    # 2. Start simulation
-    start_resp = client.post("/demo/start", json={"scenario": "cpu_stress"})
-    assert start_resp.status_code == 200
-    assert start_resp.json().get("status") == "started"
-
-    # 3. Status check
-    stat_resp = client.get("/demo/status")
-    assert stat_resp.status_code == 200
-    stat_data = stat_resp.json()
-    assert stat_data.get("active_scenario") == "cpu_stress"
-
-    # 4. Stop simulation
-    stop_resp = client.post("/demo/stop")
-    assert stop_resp.status_code == 200
-    assert stop_resp.json().get("status") == "stopped"
+def test_demo_simulator_is_not_exposed(client):
+    assert client.get("/demo/scenarios").status_code == 404
+    assert client.post("/demo/start", json={"scenario": "cpu_stress"}).status_code == 404
 
 
 # ── 6. Windows Compatibility Verification ─────────────────────────────────────

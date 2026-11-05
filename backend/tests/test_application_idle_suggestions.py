@@ -32,7 +32,7 @@ def test_foreground_activity_is_persisted_for_user_app(monkeypatch):
     connection.close()
 
 
-def test_idle_suggestions_require_one_hour_and_exclude_non_apps():
+def test_idle_suggestions_use_configured_threshold_and_exclude_non_apps():
     suggestions = applications._build_idle_suggestions(
         [
             {
@@ -62,9 +62,44 @@ def test_idle_suggestions_require_one_hour_and_exclude_non_apps():
             "recent-app": 4000,
             "system": 0,
         },
-        now=1000 + applications.IDLE_SUGGESTION_SECONDS,
+        now=1000 + 300,
+        threshold_seconds=300,
     )
 
     assert len(suggestions) == 1
     assert suggestions[0]["application_id"] == "idle-app"
-    assert suggestions[0]["idle_seconds"] == applications.IDLE_SUGGESTION_SECONDS
+    assert suggestions[0]["idle_seconds"] == 300
+
+
+def test_idle_tab_suggestions_exclude_active_and_respect_threshold():
+    suggestions = applications._build_idle_tab_suggestions(
+        [
+            {
+                "tab_id": 1,
+                "browser": "Google Chrome",
+                "title": "Idle tab",
+                "last_active_at": 1000,
+                "is_active": 0,
+            },
+            {
+                "tab_id": 2,
+                "browser": "Google Chrome",
+                "title": "Recent tab",
+                "last_active_at": 1300,
+                "is_active": 0,
+            },
+            {
+                "tab_id": 3,
+                "browser": "Google Chrome",
+                "title": "Current tab",
+                "last_active_at": 0,
+                "is_active": 1,
+            },
+        ],
+        now=1300,
+        threshold_seconds=300,
+    )
+
+    assert len(suggestions) == 1
+    assert suggestions[0]["tab_id"] == 1
+    assert suggestions[0]["idle_seconds"] == 300

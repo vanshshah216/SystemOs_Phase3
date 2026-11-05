@@ -4,7 +4,7 @@ import TopBar from "@/components/layout/TopBar";
 import { useEvents } from "@/hooks/useEvents";
 import { formatDateTime } from "@/lib/utils";
 import Link from "next/link";
-import { ChevronRight, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import { getProcessDisplayName, hideExecutableNames } from "@/lib/processNames";
 
 const FILTERS = [
@@ -101,25 +101,24 @@ export default function EventsPage() {
                   <th className="text-left py-3.5 px-4 font-semibold">Process Association</th>
                   <th className="text-left py-3.5 px-4 font-semibold">Timestamp</th>
                   <th className="text-left py-3.5 px-4 font-semibold">Status</th>
-                  <th className="py-3.5 px-4"></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {loading && events.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="py-16 text-center text-slate-400 font-mono">
+                    <td colSpan={5} className="py-16 text-center text-slate-400 font-mono">
                       Loading event history...
                     </td>
                   </tr>
                 ) : error && events.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="py-16 text-center text-amber-700 font-mono">
+                    <td colSpan={5} className="py-16 text-center text-amber-700 font-mono">
                       Event history is unavailable: {error}
                     </td>
                   </tr>
                 ) : filteredEvents.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="py-16 text-center text-slate-400 font-mono">
+                    <td colSpan={5} className="py-16 text-center text-slate-400 font-mono">
                       No events match the selected criteria.
                     </td>
                   </tr>
@@ -185,15 +184,6 @@ export default function EventsPage() {
                             />
                             {isActivityEvent ? "Recorded" : isActive ? "Active" : "Resolved"}
                           </span>
-                        </td>
-
-                        <td className="py-3.5 px-4 text-right">
-                          <Link
-                            href={`/events/${event.id}`}
-                            className="p-1 rounded text-slate-400 hover:text-blue-600 inline-flex items-center gap-1 text-xs font-semibold group-hover:translate-x-0.5 transition"
-                          >
-                            Inspect <ChevronRight className="w-3.5 h-3.5" />
-                          </Link>
                         </td>
                       </tr>
                     );

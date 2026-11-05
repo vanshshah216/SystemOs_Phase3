@@ -257,6 +257,19 @@ def test_settings_persistence(client):
     settings = resp.json()
     assert float(settings.get("sampling_interval")) == 5.0
     assert int(settings.get("persistence_n")) == 6
+    threshold_response = client.post(
+        "/settings",
+        json={"idle_suggestion_threshold_minutes": 60},
+    )
+    assert threshold_response.status_code == 200
+    assert int(threshold_response.json()["current"]["idle_suggestion_threshold_minutes"]) == 60
 
     # Restore defaults
-    client.post("/settings", json={"sampling_interval": "3", "persistence_n": "4"})
+    client.post(
+        "/settings",
+        json={
+            "sampling_interval": "3",
+            "persistence_n": "4",
+            "idle_suggestion_threshold_minutes": 5,
+        },
+    )

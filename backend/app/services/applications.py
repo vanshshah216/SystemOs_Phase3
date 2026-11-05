@@ -13,12 +13,30 @@ from app.collector.app_identity import (
     ProcessIdentity,
     aggregate_identities_to_applications,
 )
-from app.database import get_connection
+from app.database import get_connection, get_setting
 from app.diagnosis.process_analyzer import get_foreground_process_info, _CPU_COUNT
 
 logger = logging.getLogger("systemos.applications")
 
-IDLE_SUGGESTION_SECONDS = 60 * 60
+DEFAULT_IDLE_SUGGESTION_MINUTES = 5
+
+
+def _idle_suggestion_threshold_seconds() -> int:
+    try:
+        minutes = int(get_setting(
+            "idle_suggestion_threshold_minutes",
+            str(DEFAULT_IDLE_SUGGESTION_MINUTES),
+        ))
+    except (TypeError, ValueError):
+        logger.exception("Invalid idle_suggestion_threshold_minutes setting")
+        raise
+    if not 1 <= minutes <= 1440:
+        logger.error(
+            "idle_suggestion_threshold_minutes must be between 1 and 1440, got %s",
+            minutes,
+        )
+        raise ValueError("idle_suggestion_threshold_minutes is outside the supported range")
+    return minutes * 60
 
 
 def record_foreground_application(snapshots: list[dict[str, Any]], timestamp: float) -> None:
@@ -61,6 +79,7 @@ def _build_idle_suggestions(
     applications: list[dict[str, Any]],
     activity: dict[str, Any],
     now: float,
+    threshold_seconds: int,
 ) -> list[dict[str, Any]]:
     suggestions = []
     for application in applications:
@@ -68,7 +87,7 @@ def _build_idle_suggestions(
         if (
             application["role"] != "user_app"
             or last_foreground_at is None
-            or now - last_foreground_at < IDLE_SUGGESTION_SECONDS
+            or now - last_foreground_at < threshold_seconds
         ):
             continue
         suggestions.append({
@@ -79,6 +98,27 @@ def _build_idle_suggestions(
             "memory_bytes": application["memory_bytes"],
             "process_count": application["process_count"],
         })
+    suggestions.sort(key=lambda item: item["idle_seconds"], reverse=True)
+    return suggestions
+
+
+def _build_idle_tab_suggestions(
+    tabs: list[dict[str, Any]],
+    now: float,
+    threshold_seconds: int,
+) -> list[dict[str, Any]]:
+    suggestions = [
+        {
+            "tab_id": tab["tab_id"],
+            "browser": tab["browser"],
+            "title": tab["title"],
+            "last_active_at": tab["last_active_at"],
+            "idle_seconds": int(now - tab["last_active_at"]),
+        }
+        for tab in tabs
+        if not tab["is_active"]
+        and now - tab["last_active_at"] >= threshold_seconds
+    ]
     suggestions.sort(key=lambda item: item["idle_seconds"], reverse=True)
     return suggestions
 
@@ -198,6 +238,7 @@ def list_running_applications(
         for row in activity_rows
     }
     now = time.time()
+    idle_suggestion_threshold_seconds = _idle_suggestion_threshold_seconds()
     application_data = []
     for group in limited:
         app = group.to_dict()
@@ -205,9 +246,23 @@ def list_running_applications(
         application_data.append(app)
     collector_age_seconds = None if timestamp is None else max(0.0, now - timestamp)
     idle_suggestions = (
-        _build_idle_suggestions(application_data, activity, now)
+        _build_idle_suggestions(
+            application_data,
+            activity,
+            now,
+            idle_suggestion_threshold_seconds,
+        )
         if collector_age_seconds is not None and collector_age_seconds <= 60
         else []
+    )
+    tab_rows = conn.execute(
+        """SELECT tab_id, browser, title, last_active_at, is_active
+           FROM browser_tab_activity"""
+    ).fetchall()
+    idle_tab_suggestions = _build_idle_tab_suggestions(
+        [dict(row) for row in tab_rows],
+        now,
+        idle_suggestion_threshold_seconds,
     )
 
     return {
@@ -217,7 +272,8 @@ def list_running_applications(
         "cpu_percent_note": "Per-process CPU values are normalized across logical cores (0–100% scale per process).",
         "total_applications": len(groups),
         "total_processes_enumerated": len(profiles),
-        "idle_suggestion_threshold_seconds": IDLE_SUGGESTION_SECONDS,
+        "idle_suggestion_threshold_seconds": idle_suggestion_threshold_seconds,
         "idle_suggestions": idle_suggestions,
+        "idle_tab_suggestions": idle_tab_suggestions,
         "applications": application_data,
     }

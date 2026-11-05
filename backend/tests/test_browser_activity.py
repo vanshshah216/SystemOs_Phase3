@@ -10,29 +10,60 @@ from app.api import browser_activity, events
 def test_browser_activity_ingest_stores_title_and_action_only(monkeypatch):
     connection = sqlite3.connect(":memory:")
     connection.row_factory = sqlite3.Row
-    connection.execute(
+    connection.executescript(
         """CREATE TABLE browser_tab_event (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             timestamp REAL NOT NULL,
             browser TEXT NOT NULL,
             title TEXT NOT NULL,
             action TEXT NOT NULL
-        )"""
+        );
+        CREATE TABLE browser_tab_activity (
+            tab_id INTEGER PRIMARY KEY,
+            window_id INTEGER NOT NULL,
+            browser TEXT NOT NULL,
+            title TEXT NOT NULL,
+            last_active_at REAL NOT NULL,
+            is_active INTEGER NOT NULL DEFAULT 0
+        );
+        INSERT INTO browser_tab_activity
+            (tab_id, window_id, browser, title, last_active_at, is_active)
+        VALUES (16, 4, 'Google Chrome', 'Previous active tab', 100, 1);"""
     )
     monkeypatch.setattr(browser_activity, "get_connection", lambda: connection)
     payload = browser_activity.BrowserTabActivity(
         browser="Google Chrome",
         title="  Docs\t - Google Chrome  ",
         action="activated",
+        tab_id=17,
+        window_id=4,
+        active=True,
     )
 
     response = browser_activity.record_browser_activity(payload)
     row = connection.execute("SELECT * FROM browser_tab_event").fetchone()
+    tab = connection.execute(
+        "SELECT * FROM browser_tab_activity WHERE tab_id=17"
+    ).fetchone()
+    previous_tab = connection.execute(
+        "SELECT * FROM browser_tab_activity WHERE tab_id=16"
+    ).fetchone()
 
     assert response["recorded"] is True
     assert row["browser"] == "Google Chrome"
     assert row["title"] == "Docs  - Google Chrome"
     assert row["action"] == "activated"
+    assert tab["tab_id"] == 17
+    assert tab["window_id"] == 4
+    assert tab["is_active"] == 1
+    assert previous_tab["is_active"] == 0
+    assert previous_tab["last_active_at"] == response["timestamp"]
+
+    browser_activity.remove_browser_tab_activity(17)
+    assert connection.execute(
+        "SELECT COUNT(*) FROM browser_tab_activity WHERE tab_id=17"
+    ).fetchone()[0] == 0
+    assert connection.execute("SELECT COUNT(*) FROM browser_tab_activity").fetchone()[0] == 1
     connection.close()
 
 

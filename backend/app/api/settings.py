@@ -14,6 +14,7 @@ SETTINGS_KEYS = [
     "zscore_threshold",
     "persistence_n",
     "percentile_threshold",
+    "idle_suggestion_threshold_minutes",
 ]
 
 
@@ -25,6 +26,7 @@ class SettingsUpdate(BaseModel):
     zscore_threshold:     Optional[float] = Field(None, ge=1, le=5)
     persistence_n:        Optional[int]   = Field(None, ge=2, le=20)
     percentile_threshold: Optional[int]  = Field(None, ge=80, le=99)
+    idle_suggestion_threshold_minutes: Optional[int] = Field(None, ge=1, le=1440)
 
 
 

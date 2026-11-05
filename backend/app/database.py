@@ -95,6 +95,15 @@ def init_db():
         );
         CREATE INDEX IF NOT EXISTS idx_bte_timestamp ON browser_tab_event(timestamp);
 
+        CREATE TABLE IF NOT EXISTS browser_tab_activity (
+            tab_id          INTEGER PRIMARY KEY,
+            window_id       INTEGER NOT NULL,
+            browser         TEXT NOT NULL,
+            title           TEXT NOT NULL,
+            last_active_at  REAL NOT NULL,
+            is_active       INTEGER NOT NULL DEFAULT 0
+        );
+
         CREATE TABLE IF NOT EXISTS application_activity (
             application_id       TEXT PRIMARY KEY,
             display_name          TEXT NOT NULL,
@@ -153,7 +162,8 @@ def init_db():
             ('rolling_window',      '300'),
             ('zscore_threshold',    '2.0'),
             ('persistence_n',       '4'),
-            ('percentile_threshold','95');
+            ('percentile_threshold','95'),
+            ('idle_suggestion_threshold_minutes', '5');
     """)
 
     # Safe additive migrations for Phase 3 process columns

@@ -38,6 +38,12 @@ const FIELDS: { key: keyof AppSettings; label: string; desc: string; min: number
     desc: "Historical percentile boundary (e.g. 95 = P95) used as corroborating ceiling.",
     min: 80, max: 99, step: 1, unit: "th percentile", tooltipTerm: "percentile",
   },
+  {
+    key: "idle_suggestion_threshold_minutes",
+    label: "Idle Recommendation Threshold",
+    desc: "Suggest reviewing an open user application or browser tab after it has been out of use for this long. Suggestions never close anything automatically.",
+    min: 1, max: 1440, step: 1, unit: "minutes",
+  },
 ];
 
 const DEFAULTS: AppSettings = {
@@ -46,6 +52,7 @@ const DEFAULTS: AppSettings = {
   zscore_threshold: "2.0",
   persistence_n: "4",
   percentile_threshold: "95",
+  idle_suggestion_threshold_minutes: "5",
 };
 
 export default function SettingsPage() {
@@ -76,6 +83,12 @@ export default function SettingsPage() {
   };
 
   const handleSave = async () => {
+    const idleThresholdMinutes = Number(settings.idle_suggestion_threshold_minutes);
+    if (!Number.isInteger(idleThresholdMinutes) || idleThresholdMinutes < 1 || idleThresholdMinutes > 1440) {
+      setMessage({ type: "error", text: "Idle recommendation threshold must be a whole number from 1 to 1440 minutes." });
+      return;
+    }
+
     setSaving(true);
     try {
       const body: Record<string, number> = {};
@@ -83,7 +96,7 @@ export default function SettingsPage() {
       const res = await api.updateSettings(body);
       setSettings(res.current);
       setDirty(false);
-      setMessage({ type: "success", text: "Settings saved. Sampling interval changes take effect on the next collection cycle." });
+      setMessage({ type: "success", text: "Settings saved. Sampling interval changes take effect on the next collection cycle; idle recommendation thresholds update immediately." });
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : "Settings API unavailable";
       setMessage({ type: "error", text: `Error updating settings: ${message}` });
@@ -109,7 +122,7 @@ export default function SettingsPage() {
             System settings
           </h2>
           <p className="text-sm text-[#667085] font-sans mt-1">
-            Configure telemetry sampling frequencies, rolling baseline windows, and anomaly thresholds.
+            Configure telemetry sampling, anomaly detection, and the time before idle apps or tabs are suggested for review.
           </p>
         </div>
 
@@ -190,22 +203,41 @@ export default function SettingsPage() {
                     </div>
 
                     <div className="text-right shrink-0">
-                      <span className="text-base font-bold font-mono text-blue-600">
-                        {settings[f.key]}
-                      </span>
+                      {f.key === "idle_suggestion_threshold_minutes" ? (
+                        <input
+                          type="number"
+                          min={f.min}
+                          max={f.max}
+                          step={f.step}
+                          value={settings[f.key]}
+                          onChange={e => handleChange(f.key, e.target.value)}
+                          aria-label={`${f.label} in minutes`}
+                          className="w-24 rounded-lg border border-slate-200 bg-white px-2 py-1 text-right text-base font-bold font-mono text-blue-600 outline-none focus:border-blue-500"
+                        />
+                      ) : (
+                        <span className="text-base font-bold font-mono text-blue-600">
+                          {settings[f.key]}
+                        </span>
+                      )}
                       <span className="text-xs font-mono text-slate-500 ml-1.5">{f.unit}</span>
                     </div>
                   </div>
 
-                  <input
-                    type="range"
-                    min={f.min}
-                    max={f.max}
-                    step={f.step}
-                    value={parseFloat(settings[f.key]) || f.min}
-                    onChange={e => handleChange(f.key, e.target.value)}
-                    className="w-full h-2 rounded-lg bg-slate-200 appearance-none cursor-pointer accent-blue-600"
-                  />
+                  {f.key === "idle_suggestion_threshold_minutes" ? (
+                    <p className="text-xs text-slate-500 font-sans">
+                      Choose any value from 1 minute to 24 hours.
+                    </p>
+                  ) : (
+                    <input
+                      type="range"
+                      min={f.min}
+                      max={f.max}
+                      step={f.step}
+                      value={parseFloat(settings[f.key]) || f.min}
+                      onChange={e => handleChange(f.key, e.target.value)}
+                      className="w-full h-2 rounded-lg bg-slate-200 appearance-none cursor-pointer accent-blue-600"
+                    />
+                  )}
 
                   <div className="flex justify-between text-[11px] font-mono text-slate-500">
                     <span>Min: {f.min} {f.unit}</span>

@@ -25,6 +25,9 @@ async function sendTab(tab, action) {
         browser: browserName,
         title: tab.title,
         action,
+        tab_id: tab.id,
+        window_id: tab.windowId,
+        active: Boolean(tab.active),
       }),
     });
     if (!response.ok) {
@@ -78,4 +81,7 @@ chrome.tabs.onRemoved.addListener(tabId => {
   for (const key of lastSent.keys()) {
     if (key.startsWith(`${tabId}:`)) lastSent.delete(key);
   }
+  fetch(`${API_URL}/${tabId}`, { method: "DELETE" }).catch(error => {
+    console.warn("SYSTEMOS could not remove closed browser tab activity:", error);
+  });
 });

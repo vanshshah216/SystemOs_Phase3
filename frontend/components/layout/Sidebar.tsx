@@ -6,7 +6,6 @@ import {
   LayoutDashboard,
   Activity,
   Cpu,
-  AlertTriangle,
   History,
   Settings,
   ChevronLeft,
@@ -21,7 +20,6 @@ const navItems = [
   { href: "/overview",    label: "Overview",      icon: LayoutDashboard },
   { href: "/live",        label: "Live Metrics",  icon: Activity },
   { href: "/processes",   label: "Processes",     icon: Cpu },
-  { href: "/diagnostics", label: "Diagnostics",   icon: AlertTriangle },
   { href: "/events",      label: "Event History", icon: History },
   { href: "/settings",    label: "Settings",      icon: Settings },
 ];

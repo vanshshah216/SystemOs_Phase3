@@ -259,6 +259,11 @@ export default function ProcessesPage() {
     if (applicationSort === "memory_bytes") return right.memory_bytes - left.memory_bytes;
     return right.cpu_percent - left.cpu_percent;
   }), [applicationsData, applicationFilter, applicationSearch, applicationSort]);
+  const applicationSuggestions =
+    applicationsData?.collector_age_seconds != null && applicationsData.collector_age_seconds > 60
+      ? []
+      : applicationsData?.idle_suggestions ?? [];
+  const tabSuggestions = applicationsData?.idle_tab_suggestions ?? [];
 
   return (
     <div className="flex-1 flex flex-col min-w-0 bg-[#FAFCFF]">
@@ -544,10 +549,10 @@ export default function ProcessesPage() {
               <Clock className="mt-0.5 h-5 w-5 shrink-0 text-[#D97706]" />
               <div className="min-w-0 flex-1">
                 <h4 className="text-sm font-bold text-[#172033]">
-                  Idle-Use Review Suggestions (1 Hour Threshold)
+                  Idle-Use Review Suggestions ({formatDuration(applicationsData?.idle_suggestion_threshold_seconds ?? 300)})
                 </h4>
                 <p className="mt-1 text-xs text-[#667085] leading-relaxed">
-                  User applications not observed in the foreground for at least 60 minutes. Prompt for operator manual review; SYSTEMOS will never terminate an application automatically.
+                  Suggestions appear after the configured threshold without foreground use for applications, or without tab selection for browser tabs. SYSTEMOS never closes anything automatically.
                 </p>
                 {applicationsLoading && !applicationsData ? (
                   <p className="mt-3 text-xs text-[#98A2B3] font-mono">Waiting for foreground activity telemetry…</p>
@@ -555,44 +560,70 @@ export default function ProcessesPage() {
                   <p className="mt-3 text-xs text-[#DC2626] font-mono" role="alert">
                     Suggestions unavailable: {applicationsError}
                   </p>
-                ) : applicationsData?.collector_age_seconds != null && applicationsData.collector_age_seconds > 60 ? (
-                  <p className="mt-3 text-xs text-[#D97706] font-mono" role="alert">
-                    Suggestions paused because latest process snapshot is stale. Check that collector is active.
-                  </p>
-                ) : applicationsData?.idle_suggestions.length ? (
-                  <ul className="mt-3 divide-y divide-[#FDE68A]/60">
-                    {applicationsData.idle_suggestions.map(suggestion => (
-                      <li
-                        key={suggestion.application_id}
-                        className="flex flex-col gap-2 py-3 first:pt-0 last:pb-0 sm:flex-row sm:items-center sm:justify-between"
-                      >
-                        <div className="min-w-0">
-                          <div className="truncate text-sm font-bold text-[#172033]">
-                            {suggestion.display_name}
-                          </div>
-                          <div className="mt-1 text-[11px] text-[#667085] font-mono">
-                            Last observed in foreground {formatDuration(suggestion.idle_seconds)} ago
-                            {" · "}{suggestion.process_count} process{suggestion.process_count === 1 ? "" : "es"}
-                            {" · "}{(suggestion.memory_bytes / (1024 * 1024)).toFixed(0)} MB resident memory
-                          </div>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setApplicationFilter("all");
-                            setApplicationSearch(suggestion.display_name);
-                          }}
-                          className="self-start rounded-xl border border-[#FDE68A] bg-white px-3 py-1.5 text-xs font-semibold text-[#D97706] hover:bg-[#FFFBEB] sm:self-auto shadow-2xs transition-colors"
-                        >
-                          Find in running apps
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
                 ) : (
-                  <p className="mt-3 text-xs text-[#667085]">
-                    No eligible running apps have been observed outside the foreground for over an hour. Activity tracking begins when an application is observed in the foreground.
-                  </p>
+                  <>
+                    {applicationsData?.collector_age_seconds != null && applicationsData.collector_age_seconds > 60 && (
+                      <p className="mt-3 text-xs text-[#D97706] font-mono" role="alert">
+                        Application suggestions are paused because the latest process snapshot is stale. Browser tab suggestions are still shown.
+                      </p>
+                    )}
+                    {applicationSuggestions.length || tabSuggestions.length ? (
+                      <ul className="mt-3 divide-y divide-[#FDE68A]/60">
+                        {applicationSuggestions.map(suggestion => (
+                          <li
+                            key={suggestion.application_id}
+                            className="flex flex-col gap-2 py-3 first:pt-0 last:pb-0 sm:flex-row sm:items-center sm:justify-between"
+                          >
+                            <div className="min-w-0">
+                              <div className="truncate text-sm font-bold text-[#172033]">
+                                {suggestion.display_name}
+                              </div>
+                              <div className="mt-1 text-[11px] text-[#667085] font-mono">
+                                Last observed in foreground {formatDuration(suggestion.idle_seconds)} ago
+                                {" · "}{suggestion.process_count} process{suggestion.process_count === 1 ? "" : "es"}
+                                {" · "}{(suggestion.memory_bytes / (1024 * 1024)).toFixed(0)} MB resident memory
+                              </div>
+                              <div className="mt-1 text-xs text-[#D97706]">
+                                Consider closing this application if you no longer need it.
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setApplicationFilter("all");
+                                setApplicationSearch(suggestion.display_name);
+                              }}
+                              className="self-start rounded-xl border border-[#FDE68A] bg-white px-3 py-1.5 text-xs font-semibold text-[#D97706] hover:bg-[#FFFBEB] sm:self-auto shadow-2xs transition-colors"
+                            >
+                              Find in running apps
+                            </button>
+                          </li>
+                        ))}
+                        {tabSuggestions.map(suggestion => (
+                          <li
+                            key={`tab-${suggestion.tab_id}`}
+                            className="flex flex-col gap-2 py-3 first:pt-0 last:pb-0 sm:flex-row sm:items-center sm:justify-between"
+                          >
+                            <div className="min-w-0">
+                              <div className="truncate text-sm font-bold text-[#172033]">
+                                {suggestion.title}
+                              </div>
+                              <div className="mt-1 text-[11px] text-[#667085] font-mono">
+                                {suggestion.browser} tab · Not selected for {formatDuration(suggestion.idle_seconds)}
+                              </div>
+                            </div>
+                            <span className="self-start rounded-xl border border-[#FDE68A] bg-white px-3 py-1.5 text-xs font-semibold text-[#D97706] sm:self-auto">
+                              Consider closing this tab
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="mt-3 text-xs text-[#667085]">
+                        No running applications or browser tabs have been idle beyond the configured threshold. Application tracking begins after the collector sees an app in the foreground; tab suggestions require the Chrome extension.
+                      </p>
+                    )}
+                  </>
                 )}
               </div>
             </div>

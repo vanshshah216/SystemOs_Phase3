@@ -181,6 +181,14 @@ export interface IdleApplicationSuggestion {
   process_count: number;
 }
 
+export interface IdleBrowserTabSuggestion {
+  tab_id: number;
+  browser: string;
+  title: string;
+  last_active_at: number;
+  idle_seconds: number;
+}
+
 export interface ApplicationsResponse {
   timestamp: number | null;
   collector_age_seconds?: number | null;
@@ -190,6 +198,7 @@ export interface ApplicationsResponse {
   total_processes_enumerated: number;
   idle_suggestion_threshold_seconds: number;
   idle_suggestions: IdleApplicationSuggestion[];
+  idle_tab_suggestions: IdleBrowserTabSuggestion[];
   applications: ApplicationGroup[];
 }
 
@@ -199,6 +208,7 @@ export interface AppSettings {
   zscore_threshold: string;
   persistence_n: string;
   percentile_threshold: string;
+  idle_suggestion_threshold_minutes: string;
 }
 
 // ── Phase 3 Process Analyzer & Recommendation Types ────────────────────────────
